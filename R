@@ -1,0 +1,455 @@
+rm(list=ls())  # clear memory
+# ===========  Load R libraries (install them before loading) ====================
+library(rstan)
+library(tidyverse)
+library(bayesplot)
+library(deSolve)
+library(readxl)
+
+# ===================================Fitting all for Muc_func==========================================
+
+WT_viral_load_data <- read_excel("Muc1/PR8-viral-load.xls", sheet = 1) %>% rename(Days = Days, ViralLoad = `Viral load`)
+KO_viral_load_data <- read_excel("Muc1/PR8-viral-load.xls", sheet = 2) %>% rename(Days = Days, ViralLoad = `Viral load`)
+WT_TNF_data <- read_excel("Muc1/TNF.xls", sheet = 1) %>% rename(Days = Days, TNFlevel = `TNF level`)
+KO_TNF_data <- read_excel("Muc1/TNF.xls", sheet = 2) %>% rename(Days = Days, TNFlevel = `TNF level`)
+WT_macrophage_data <- read_excel("Muc1/Macrophage.xls", sheet = 1) %>% rename(Days = Days, Macrophage = 'Macro level')
+KO_macrophage_data <- read_excel("Muc1/Macrophage.xls", sheet = 2) %>% rename(Days = Days, Macrophage = 'Macro level')
+
+
+time_data <- c(1,2,3,5,7)
+V_data_WT <- WT_viral_load_data$ViralLoad
+V_data_KO <- KO_viral_load_data$ViralLoad
+TNF_data_WT <- WT_TNF_data$TNFlevel
+TNF_data_KO <- KO_TNF_data$TNFlevel
+
+time_data_macrophage <- c(1,3,5,7)
+Macrophage_data_WT <- WT_macrophage_data$Macrophage
+Macrophage_data_KO <- KO_macrophage_data$Macrophage
+
+
+
+data_combined_muc1 <-  list(N_T_WT = length(time_data),
+                               N_V_WT = length(V_data_WT),
+                               time_data_WT = time_data,
+                               log_viral_load_data_WT = log(V_data_WT), # above V_WT
+                               N_T_KO = length(time_data),
+                               N_V_KO = length(V_data_KO),
+                               time_data_KO = time_data,
+                               log_viral_load_data_KO = log(V_data_KO), # above V_KO
+                               N_T_TNF_WT = length(time_data),
+                               N_TNF_WT = length(TNF_data_WT),
+                               time_data_TNF_WT = time_data,
+                               TNF_data_WT = TNF_data_WT, # above TNF_WT
+                               N_T_TNF_KO = length(time_data),
+                               N_TNF_KO = length(TNF_data_KO),
+                               time_data_TNF_KO = time_data,
+                               TNF_data_KO = TNF_data_KO, # above TNF_WT
+                               N_T_Macrophage_WT = length(time_data_macrophage),
+                               N_Macrophage_WT = length(Macrophage_data_WT),
+                               time_data_Macrophage_WT = time_data_macrophage,
+                               Macrophage_data_WT = log(Macrophage_data_WT), # above Macrophage_WT
+                               N_T_Macrophage_KO = length(time_data_macrophage),
+                               N_Macrophage_KO = length(Macrophage_data_KO),
+                               time_data_Macrophage_KO = time_data_macrophage,
+                               Macrophage_data_KO = log(Macrophage_data_KO), # above Macrophage_WT
+                               t0 = 0,
+                               T0 = 4e+8,
+                               I0 = 0,
+                               F0 = 0,
+                               MR0 = 1e+6,
+                               MA0 = 0)
+
+init1 <- list(
+  theta = c(0.5, 0.5, 3.4e-5, 3.4, 7.9e-3, 2, 1e-5, 0.5, 0.5, 1e-5, 0.5,1e-2,1e-6,1e-6,1,3.5e-1),
+  sigma = c(0.5,0.5,0.5))
+
+init2 <- list(
+  theta = c(0.8, 1, 1e-4, 5, 2.2e-3, 2, 1e-5, 0.8, 1, 1e-4, 0.5, 5e-2, 1e-4,1e-6, 1, 1.5e-1),
+  sigma = c(0.5,0.5,0.5))
+
+options(mc.cores=parallel::detectCores()) # to utilise all cores available in your computer
+
+Estimate_Full <- stan("Muc1/Muc1.stan",
+                            data = data_combined_muc1,
+                            pars = c("theta","theta_hat","sigma"),
+                            seed = 90127,  # set random seed for reproducibility
+                            iter = 2000,
+                            chains = 2,
+                            init = list(init1,init2),
+                            warmup = 1000,
+                            control = list(adapt_delta = 0.99, max_treedepth = 15))
+
+
+print(Estimate_Full, pars = c("theta","theta_hat","sigma"))
+stan_dens(Estimate_Full, pars = c("theta","sigma"), separate_chains = TRUE)
+
+
+
+# extract posterior samples for selected parameters
+posterior_samples_all = rstan::extract(Estimate_Full_9_Sep, pars = c("theta"), inc_warmup = TRUE, permuted = FALSE)
+posterior_samples_merged_after_burnin = rstan::extract(Estimate_Full_9_Sep, pars = c("theta"))
+
+# show markov chains
+color_scheme_set("brewer-Spectral")
+mcmc_trace(posterior_samples_all, n_warmup = 200,
+           facet_args = list(nrow = 3, labeller = label_parsed))
+
+# show all marginal posterior distributions
+posterior_sample_table = data.frame(epsilon1 = posterior_samples_merged_after_burnin$theta[,1],
+                                    k1 = posterior_samples_merged_after_burnin$theta[,2],
+                                    beta = posterior_samples_merged_after_burnin$theta[,3],
+                                    delta_I = posterior_samples_merged_after_burnin$theta[,4],
+                                    p = posterior_samples_merged_after_burnin$theta[,5],
+                                    c = posterior_samples_merged_after_burnin$theta[,6],
+                                    epsilon2 = posterior_samples_merged_after_burnin$theta[,7],
+                                    k2 = posterior_samples_merged_after_burnin$theta[,8],
+                                    q_F = posterior_samples_merged_after_burnin$theta[,9],
+                                    delta_F = posterior_samples_merged_after_burnin$theta[,10],
+                                    V0 = posterior_samples_merged_after_burnin$theta[,11])
+
+
+ggplot(posterior_sample_table, aes(x=epsilon1)) + geom_histogram(breaks=seq(0,1,1/30))+theme_bw()
+ggplot(posterior_sample_table, aes(x=k1)) + geom_histogram(breaks=seq(0,2,1/30))+theme_bw()
+ggplot(posterior_sample_table, aes(x=beta)) + geom_histogram(breaks=seq(0,0.03,0.03/30))+theme_bw()
+ggplot(posterior_sample_table, aes(x=delta_I)) + geom_histogram(breaks=seq(0,2,2/30))+theme_bw()
+ggplot(posterior_sample_table, aes(x=q_F)) + geom_histogram(breaks=seq(0,1e-6,1e-6/30))+theme_bw()
+ggplot(posterior_sample_table, aes(x=delta_F)) + geom_histogram(breaks=seq(0,1,1/30))+theme_bw()
+
+
+# show parameter correlations
+pairs(posterior_samples_merged_after_burnin)
+
+# posterior predictive check
+Within_host_model_WT = function(t, y, param){
+  dydt1  = -(1 - param[1] * t^10/ (t^10 + param[2]^10)) * param[3] * y[1] * y[3]
+  dydt2 = (1 - param[1] * t^10/ (t^10 + param[2]^10)) * param[3] * y[1] * y[3] - param[4] * y[2]
+  dydt3 = param[5] * y[2] - param[6] * y[3]
+  dydt4 = (1 - param[7] * t^10/(t^10 + param[8]^10)) * param[9] * y[2] - param[10] * y[4]
+  
+  list(c(dydt1, dydt2, dydt3, dydt4))
+  
+}
+
+Within_host_model_KO = function(t, y, param){
+  dydt1  = -(1 - 0 * t^10/ (t^10 + param[2]^10)) * param[3] * y[1] * y[3]
+  dydt2 = (1 - 0 * t^10/ (t^10 + param[2]^10)) * param[3] * y[1] * y[3] - param[4] * y[2]
+  dydt3 = param[5] * y[2] - param[6] * y[3]
+  dydt4 = (1 - 0 * t^10/(t^10 + param[8]^10)) * param[9] * y[2] - param[10] * y[4]
+  
+  list(c(dydt1, dydt2, dydt3, dydt4))
+  
+}
+
+t_ppc = seq(0, 10, 0.1)
+V_ppc_WT = matrix(, nrow = 1000, ncol = length(t_ppc))
+F_ppc_WT = matrix(, nrow = 1000, ncol = length(t_ppc))
+V_ppc_KO = matrix(, nrow = 1000, ncol = length(t_ppc))
+F_ppc_KO = matrix(, nrow = 1000, ncol = length(t_ppc))
+
+lower_95PI_WT = t_ppc
+median_95PI_WT = t_ppc
+upper_95PI_WT = t_ppc
+
+lower_95PI_KO = t_ppc
+median_95PI_KO = t_ppc
+upper_95PI_KO = t_ppc
+
+lower_95PI_WT_F = t_ppc
+median_95PI_WT_F = t_ppc
+upper_95PI_WT_F = t_ppc
+
+lower_95PI_KO_F = t_ppc
+median_95PI_KO_F = t_ppc
+upper_95PI_KO_F = t_ppc
+
+for (i in 1:1000){
+  y_init = c(data_combined_muc1_WT$T0, data_combined_muc1_WT$I0, posterior_sample_table$V0[i], data_combined_muc1_WT$F0)
+  param_fit = c(posterior_sample_table$epsilon1[i],
+                posterior_sample_table$k1[i],
+                posterior_sample_table$beta[i], 
+                posterior_sample_table$delta_I[i], 
+                posterior_sample_table$p[i], 
+                posterior_sample_table$c[i],
+                posterior_sample_table$epsilon2[i],
+                posterior_sample_table$k2[i],
+                posterior_sample_table$q_F[i],
+                posterior_sample_table$delta_F[i])
+  
+  param_fit_hat = c(posterior_sample_table$epsilon1[i]*0,
+                posterior_sample_table$k1[i],
+                posterior_sample_table$beta[i], 
+                posterior_sample_table$delta_I[i], 
+                posterior_sample_table$p[i], 
+                posterior_sample_table$c[i],
+                posterior_sample_table$epsilon2[i]*0,
+                posterior_sample_table$k2[i],
+                posterior_sample_table$q_F[i],
+                posterior_sample_table$delta_F[i])
+  
+  model_output_WT = ode(times = t_ppc, y = y_init, func = Within_host_model_WT, parms = param_fit, method = "bdf")
+  model_output_KO = ode(times = t_ppc, y = y_init, func = Within_host_model_WT, parms = param_fit_hat, method = "bdf")
+  V_ppc_WT[i,] = model_output_WT[,4]
+  F_ppc_WT[i,] = model_output_WT[,5]
+  
+  V_ppc_KO[i,] = model_output_KO[,4]
+  F_ppc_KO[i,] = model_output_KO[,5]
+}
+
+
+
+
+
+
+for (i in 1:length(t_ppc)){
+  temp_WT = unname(quantile(V_ppc_WT[,i], probs = c(0.025, 0.5, 0.975)))
+  temp_KO = unname(quantile(V_ppc_KO[,i], probs = c(0.025, 0.5, 0.975)))
+  temp_WT_F = unname(quantile(F_ppc_WT[,i], probs = c(0.025, 0.5, 0.975)))
+  temp_KO_F = unname(quantile(F_ppc_KO[,i], probs = c(0.025, 0.5, 0.975)))
+  
+  lower_95PI_WT[i] = temp_WT[1]
+  median_95PI_WT[i] = temp_WT[2]
+  upper_95PI_WT[i] = temp_WT[3]
+  
+  lower_95PI_KO[i] = temp_KO[1]
+  median_95PI_KO[i] = temp_KO[2]
+  upper_95PI_KO[i] = temp_KO[3]
+  
+  lower_95PI_WT_F[i] = temp_WT_F[1]
+  median_95PI_WT_F[i] = temp_WT_F[2]
+  upper_95PI_WT_F[i] = temp_WT_F[3]
+  
+  lower_95PI_KO_F[i] = temp_KO_F[1]
+  median_95PI_KO_F[i] = temp_KO_F[2]
+  upper_95PI_KO_F[i] = temp_KO_F[3]
+  
+}
+
+data_plot = data.frame(time = rep(c(1,2,3,5,7), each = 5),
+                       V_WT = log10(exp(data_combined_muc1_WT$log_viral_load_data_WT)),
+                       V_KO = log10(exp(data_combined_muc1_WT$log_viral_load_data_KO)))
+
+fit_plot = data.frame(time = t_ppc,
+                      lower_95PI_WT = lower_95PI_WT,
+                      V_WT = median_95PI_WT,
+                      upper_95PI_WT = upper_95PI_WT,
+                      lower_95PI_KO = lower_95PI_KO,
+                      V_KO = median_95PI_KO,
+                      upper_95PI_KO = upper_95PI_KO)
+
+ggplot(fit_plot, aes(time))+
+  geom_point(data = data_plot, aes(time, V_WT), size = 3) +
+  geom_line(data = fit_plot, aes(time, log10(V_WT))) +
+  geom_ribbon(aes(ymin = log10(lower_95PI_WT), ymax = log10(upper_95PI_WT)), alpha = 0.5, na.rm = TRUE) +
+  theme_bw() # V_WT
+
+ggplot(fit_plot, aes(time))+
+  geom_point(data = data_plot, aes(time, V_KO), size = 3) +
+  geom_line(data = fit_plot, aes(time, log10(V_KO))) +
+  geom_ribbon(aes(ymin = log10(lower_95PI_KO), ymax = log10(upper_95PI_KO)), alpha = 0.5, na.rm = TRUE) +
+  theme_bw() # V_KO
+
+
+
+
+data_plot_F_WT = data.frame(time = rep(c(1,2,3,5,7), c(2,4,5,4,4)),
+                       F_WT = data_combined_muc1_WT$TNF_data_WT)
+
+data_plot_F_KO = data.frame(time = rep(c(1,2,3,5,7), c(2,3,6,4,5)),
+                            F_KO = data_combined_muc1_WT$TNF_data_KO)
+                       
+
+fit_plot_F = data.frame(time = t_ppc,
+                      lower_95PI_WT_F = lower_95PI_WT_F,
+                      F_WT = median_95PI_WT_F,
+                      upper_95PI_WT_F = upper_95PI_WT_F,
+                      lower_95PI_KO_F = lower_95PI_KO_F,
+                      F_KO = median_95PI_KO_F,
+                      upper_95PI_KO_F = upper_95PI_KO_F)
+
+ggplot(fit_plot_F, aes(time))+
+  geom_point(data = data_plot_F_WT, aes(time, F_WT), size = 3) +
+  geom_line(data = fit_plot_F, aes(time, F_WT)) +
+  geom_ribbon(aes(ymin = lower_95PI_WT_F, ymax = upper_95PI_WT_F), alpha = 0.5, na.rm = TRUE) +
+  theme_bw() # F_WT
+
+
+ggplot(fit_plot_F, aes(time))+
+  geom_point(data = data_plot_F_KO, aes(time, F_KO), size = 3)+
+  geom_line(data = fit_plot_F, aes(time, F_KO))+
+  geom_ribbon(aes(ymin = lower_95PI_KO_F, ymax = upper_95PI_KO_F), alpha = 0.5, na.rm = TRUE) +
+  theme_bw() # F_KO
+
+
+
+# =============== Save the fitting results and generate outputs in CSV file  ===================
+write.csv(posterior_samples_merged_after_burnin, file="Muc1_fit_results2.csv")
+save.image(file = "fitting_results_Mu1")
+
+
+
+
+
+#================ only fit viral load data to the model ===================
+
+data_combined_muc1_WT_V <-  list(N_T_WT = length(time_data),
+                                 N_V_WT = length(V_data_WT),
+                                 time_data_WT = time_data,
+                                 log_viral_load_data_WT = log(V_data_WT), # above V_WT
+                                 N_T_KO = length(time_data),
+                                 N_V_KO = length(V_data_KO),
+                                 time_data_KO = time_data,
+                                 log_viral_load_data_KO = log(V_data_KO), # above V_KO
+                                 t0 = 0,
+                                 T0 = 4e+8,
+                                 I0 = 0)
+
+#plot_df <- data.frame(time = as.factor(rep(c(1,2,3,5,7,1,2,3,5,7),each = 5)), Viral_load = c( log10(V_data_WT) ,log10(V_data_KO)), type = rep(as.factor(c("WT", "KO")), each = 25))
+#ggplot(plot_df, aes(x = time, y = Viral_load, fill = type)) + geom_boxplot() 
+
+
+init1 <- list(
+  theta = c(0.5, 1, 6e-5, 2.1, 2.2e-3, 3, 0.33),
+  sigma = 0.5)
+
+init2 <- list(
+  theta = c(0.1, 2, 1.4e-5, 3, 2.2e-3, 3, 0.33),
+  sigma = 0.5)
+
+
+
+#init2 <-  list(
+#  theta = c(runif(1,0.1,0.9), runif(1,0.1,2), runif(1,3.8e-6,1.6e-4), runif(1,2.1,11.2), runif(1,3.2e-3,7.1e-2), runif(1,2.1,4.2), 
+#            runif(1,1.4e-3,9.1e-1)),
+#  sigma = 0.5)
+
+
+
+Estimate_V <- stan("Muc1_Virus.stan",
+                   data = data_combined_muc1_WT_V,
+                   pars = c("theta","theta_hat","sigma"),
+                   seed = 90127,  # set random seed for reproducibility
+                   iter = 2000,
+                   chains = 1,
+                   init = list(init1),
+                   warmup = 1000,
+                   control = list(adapt_delta = 0.99, max_treedepth = 20))
+
+
+print(Estimate_V, pars = c("theta","theta_hat","sigma"))
+stan_dens(Estimate_V, pars = c("theta","sigma"), separate_chains = TRUE) # + 
+# xlab("theta[1:7] = c(epsilon1,k1,theta,delta_I, p, delta_V)")
+
+
+# extract posterior samples for selected parameters
+posterior_samples_all = rstan::extract(Estimate_V, pars = c("theta","sigma"), inc_warmup = TRUE, permuted = FALSE)
+posterior_samples_merged_after_burnin = rstan::extract(Estimate_V, pars = c("theta","sigma"))
+
+# show markov chains
+color_scheme_set("brewer-Spectral")
+mcmc_trace(posterior_samples_all, n_warmup =1000,
+           facet_args = list(nrow = 3, labeller = label_parsed))
+
+
+# show all marginal posterior distributions
+posterior_sample_table = data.frame(epsilon1 = posterior_samples_merged_after_burnin$theta[,1],
+                                    k1 = posterior_samples_merged_after_burnin$theta[,2],
+                                    beta = posterior_samples_merged_after_burnin$theta[,3],
+                                    delta_I = posterior_samples_merged_after_burnin$theta[,4],
+                                    p = posterior_samples_merged_after_burnin$theta[,5],
+                                    c = posterior_samples_merged_after_burnin$theta[,6],
+                                    V0 = posterior_samples_merged_after_burnin$theta[,7])
+
+ggplot(posterior_sample_table, aes(x=epsilon1)) + geom_histogram(breaks=seq(0,1,1/30))+theme_bw()
+ggplot(posterior_sample_table, aes(x=k1)) + geom_histogram(breaks=seq(0,2,1/30))+theme_bw()
+ggplot(posterior_sample_table, aes(x=beta)) + geom_histogram(breaks=seq(0,1e-4,1e-5/30))+theme_bw()
+
+# show parameter correlations
+pairs(posterior_samples_merged_after_burnin$theta[,1:6], labels = c("epsilon1","k1","theta","delta_I", "p", "delta_V"), col = c( "blue", "red"))
+
+# posterior predictive check
+Within_host_model_WT = function(t, y, param){
+  dydt1  = -(1 - param[1] * t^10/ (t^10 + param[2]^10)) * param[3] * y[1] * y[3]
+  dydt2 = (1 - param[1] * t^10/ (t^10 + param[2]^10)) * param[3] * y[1] * y[3] - param[4] * y[2]
+  dydt3 = param[5] * y[2] - param[6] * y[3]
+  
+  list(c(dydt1, dydt2, dydt3))
+  
+}
+
+
+t_ppc = seq(0, 10, 0.1)
+
+V_ppc_WT = matrix(, nrow = 1000, ncol = length(t_ppc))
+lower_95PI_WT = t_ppc
+median_95PI_WT = t_ppc
+upper_95PI_WT = t_ppc
+
+
+V_ppc_KO = matrix(, nrow = 1000, ncol = length(t_ppc))
+lower_95PI_KO = t_ppc
+median_95PI_KO = t_ppc
+upper_95PI_KO = t_ppc
+
+for (i in 1:1000){
+  y_init = c(data_combined_muc1_WT_V$T0, data_combined_muc1_WT_V$I0, posterior_sample_table$V0[i])
+  param_fit_WT = c(posterior_sample_table$epsilon1[i],
+                   posterior_sample_table$k1[i],
+                   posterior_sample_table$beta[i], 
+                   posterior_sample_table$delta_I[i], 
+                   posterior_sample_table$p[i], 
+                   posterior_sample_table$c[i])
+  
+  param_fit_KO = c(posterior_sample_table$epsilon1[i] * 0,
+                   posterior_sample_table$k1[i],
+                   posterior_sample_table$beta[i], 
+                   posterior_sample_table$delta_I[i], 
+                   posterior_sample_table$p[i], 
+                   posterior_sample_table$c[i])
+  
+  model_output_WT = ode(times = t_ppc, y = y_init, func = Within_host_model_WT, parms = param_fit_WT, method = "bdf")
+  model_output_KO = ode(times = t_ppc, y = y_init, func = Within_host_model_WT, parms = param_fit_KO, method = "bdf")
+  
+  
+  V_ppc_WT[i,] = model_output_WT[,4]
+  V_ppc_KO[i,] = model_output_KO[,4]
+}
+
+
+
+for (i in 1:length(t_ppc)){
+  temp_WT = unname(quantile(V_ppc_WT[,i], probs = c(0.025, 0.5, 0.975)))
+  lower_95PI_WT[i] = temp_WT[1]
+  median_95PI_WT[i] = temp_WT[2]
+  upper_95PI_WT[i] = temp_WT[3]
+  
+  temp_KO = unname(quantile(V_ppc_KO[,i], probs = c(0.025, 0.5, 0.975)))
+  lower_95PI_KO[i] = temp_KO[1]
+  median_95PI_KO[i] = temp_KO[2]
+  upper_95PI_KO[i] = temp_KO[3]
+  
+}
+
+data_plot = data.frame(time = rep(c(1,2,3,5,7), each = 5),
+                       V_WT = log10(exp(data_combined_muc1_WT_V$log_viral_load_data_WT)),
+                       V_KO = log10(exp(data_combined_muc1_WT_V$log_viral_load_data_KO)))
+
+fit_plot = data.frame(time = t_ppc,
+                      lower_95PI_WT = lower_95PI_WT,
+                      V_WT = median_95PI_WT,
+                      upper_95PI_WT = upper_95PI_WT,
+                      lower_95PI_KO = lower_95PI_KO,
+                      V_KO = median_95PI_KO,
+                      upper_95PI_KO = upper_95PI_KO)
+
+ggplot(fit_plot, aes(time))+
+  geom_point(data = data_plot, aes(time, V_WT), size = 3) +
+  geom_line(data = fit_plot, aes(time, log10(V_WT))) +
+  geom_ribbon(aes(ymin = log10(lower_95PI_WT), ymax = log10(upper_95PI_WT)), alpha = 0.5, na.rm = TRUE) +
+  theme_bw()
+
+ggplot(fit_plot, aes(time))+
+  geom_point(data = data_plot, aes(time, V_KO), size = 3) +
+  geom_line(data = fit_plot, aes(time, log10(V_KO))) +
+  geom_ribbon(aes(ymin = log10(lower_95PI_KO), ymax = log10(upper_95PI_KO)), alpha = 0.5, na.rm = TRUE) +
+  theme_bw()
+
