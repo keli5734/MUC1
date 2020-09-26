@@ -39,7 +39,6 @@ data{
   real t0; // initial time point 
   real T0; // initial target cells
   real I0; // initial infected cells 
-  real V0; // initial viral load
   real MR0; // inital M_R
   real MA0; // inital M_A
   real MP0; // initial M_P
@@ -51,7 +50,7 @@ transformed data{
 }
 
 parameters{
-  real<lower=0> theta[14]; 
+  real<lower=0> theta[15]; 
   real<lower=0> sigma[2];
 }
 
@@ -62,7 +61,7 @@ transformed parameters{
   
   real y_hat_KO[N_T_KO,6];
   vector[N_V_KO] V_pred_KO;
-  real theta_hat[14];
+  real theta_hat[15];
   
   real y_hat_WT_Macrophage[N_T_Macrophage_WT,6];
   vector[N_Macrophage_WT] Macrophage_pred_WT;
@@ -74,7 +73,7 @@ transformed parameters{
   
   Y0[1] = T0;
   Y0[2] = I0;
-  Y0[3] = V0;
+  Y0[3] = theta[15];
   Y0[4] = MR0;
   Y0[5] = MA0;
   Y0[6] = MP0;
@@ -86,7 +85,7 @@ transformed parameters{
   }
   theta_hat[13] = 0;
   theta_hat[14] = theta[14];
-  
+  theta_hat[15] = theta[15];
 
   
   y_hat_WT = integrate_ode_bdf(Muc1_func, Y0, t0, time_data_WT, theta, x_r, x_i);
@@ -118,21 +117,21 @@ transformed parameters{
 
 model{
 // priors
-theta[1] ~ normal(0.5,0.5); // epsilon1
-theta[2] ~ normal(0,5); // k1
-theta[3] ~ lognormal(log(2.5e-5),1); // beta
-theta[4] ~ lognormal(log(1.3),1); // delta_I
-theta[5] ~ lognormal(log(5e-3),1); // p
-theta[6] ~ lognormal(log(1.3),1); // delta_V
-theta[7] ~ lognormal(log(1e-7),1); // kappa_M
-theta[8] ~ lognormal(log(1e-6),1); // q_V
-theta[9] ~ lognormal(log(3e+2),1); // s
-theta[10] ~ lognormal(log(1),1); // eta
-theta[11] ~ lognormal(log(1e-2),1); // delta_M
-theta[12] ~ lognormal(log(120), 1); // phi 
-theta[13] ~ normal(0.5,0.5); // epsilon2
-theta[14] ~ normal(0,5); // k2
-//theta[13] ~ lognormal(log(3.5e-1),1); // V0
+theta[1] ~ uniform(0,1); // epsilon1
+theta[2] ~ normal(1,5); // k1
+theta[3] ~ lognormal(log(5.1e-6),1); // beta
+theta[4] ~ uniform(0,5); // delta_I
+theta[5] ~ normal(5e-3,5); // p
+theta[6] ~ uniform(0,50); // delta_V
+theta[7] ~ normal(1.25e-8,1e-6); // kappa_M
+theta[8] ~ normal(0,1); // q_V
+theta[9] ~ uniform(200,500); // s
+theta[10] ~ uniform(0,5); // eta
+theta[11] ~ uniform(0,0.1); // delta_M
+theta[12] ~ uniform(0,500);//lognormal(log(120), 1); // phi 
+theta[13] ~ uniform(0,1); // epsilon2
+theta[14] ~ normal(1,5);  // k2
+theta[15] ~ uniform(1,30); //lognormal(log(3.5e-1),1); // V0
 //theta[13] ~ lognormal(log(0.3),1); // delta_Mr
 sigma[1] ~ normal(0,1);
 sigma[2] ~ normal(0,1);
