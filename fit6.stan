@@ -39,7 +39,6 @@ data{
   real t0; // initial time point 
   real T0; // initial target cells
   real I0; // initial infected cells 
-  real MR0; // inital M_R
   real MA0; // inital M_A
   real MP0; // initial M_P
 }
@@ -74,7 +73,7 @@ transformed parameters{
   Y0[1] = T0;
   Y0[2] = I0;
   Y0[3] = theta[15];
-  Y0[4] = MR0;
+  Y0[4] = theta[9]/theta[11];
   Y0[5] = MA0;
   Y0[6] = MP0;
   
@@ -102,16 +101,16 @@ transformed parameters{
   
   y_hat_WT_Macrophage = integrate_ode_bdf(Muc1_func, Y0, t0, time_data_Macrophage_WT, theta, x_r, x_i);
   Macrophage_pred_WT[1:5] = rep_vector(y_hat_WT_Macrophage[1,4]+y_hat_WT_Macrophage[1,5]+y_hat_WT_Macrophage[1,6],5);
-  Macrophage_pred_WT[6:10] = rep_vector(y_hat_WT_Macrophage[1,4]+y_hat_WT_Macrophage[1,5]+y_hat_WT_Macrophage[1,6],5);
-  Macrophage_pred_WT[11:15] = rep_vector(y_hat_WT_Macrophage[1,4]+y_hat_WT_Macrophage[1,5]+y_hat_WT_Macrophage[1,6],5);
-  Macrophage_pred_WT[16:19] = rep_vector(y_hat_WT_Macrophage[1,4]+y_hat_WT_Macrophage[1,5]+y_hat_WT_Macrophage[1,6],4);
+  Macrophage_pred_WT[6:10] = rep_vector(y_hat_WT_Macrophage[2,4]+y_hat_WT_Macrophage[2,5]+y_hat_WT_Macrophage[2,6],5);
+  Macrophage_pred_WT[11:15] = rep_vector(y_hat_WT_Macrophage[3,4]+y_hat_WT_Macrophage[3,5]+y_hat_WT_Macrophage[3,6],5);
+  Macrophage_pred_WT[16:19] = rep_vector(y_hat_WT_Macrophage[4,4]+y_hat_WT_Macrophage[4,5]+y_hat_WT_Macrophage[4,6],4);
   
   
   y_hat_KO_Macrophage = integrate_ode_bdf(Muc1_func, Y0, t0, time_data_Macrophage_KO, theta_hat, x_r, x_i);
-  Macrophage_pred_KO[1:5] = rep_vector(y_hat_WT_Macrophage[1,4]+y_hat_WT_Macrophage[1,5]+y_hat_WT_Macrophage[1,6],5);
-  Macrophage_pred_KO[6:9] = rep_vector(y_hat_WT_Macrophage[1,4]+y_hat_WT_Macrophage[1,5]+y_hat_WT_Macrophage[1,6],4);
-  Macrophage_pred_KO[10:14] = rep_vector(y_hat_WT_Macrophage[1,4]+y_hat_WT_Macrophage[1,5]+y_hat_WT_Macrophage[1,6],5);
-  Macrophage_pred_KO[15:20] = rep_vector(y_hat_WT_Macrophage[1,4]+y_hat_WT_Macrophage[1,5]+y_hat_WT_Macrophage[1,6],6);
+  Macrophage_pred_KO[1:5] = rep_vector(y_hat_KO_Macrophage[1,4]+y_hat_KO_Macrophage[1,5]+y_hat_KO_Macrophage[1,6],5);
+  Macrophage_pred_KO[6:9] = rep_vector(y_hat_KO_Macrophage[2,4]+y_hat_KO_Macrophage[2,5]+y_hat_KO_Macrophage[2,6],4);
+  Macrophage_pred_KO[10:14] = rep_vector(y_hat_KO_Macrophage[3,4]+y_hat_KO_Macrophage[3,5]+y_hat_KO_Macrophage[3,6],5);
+  Macrophage_pred_KO[15:20] = rep_vector(y_hat_KO_Macrophage[4,4]+y_hat_KO_Macrophage[4,5]+y_hat_KO_Macrophage[4,6],6);
 
 }
 
@@ -124,7 +123,7 @@ theta[4] ~ uniform(0,5); // delta_I
 theta[5] ~ normal(5e-3,5); // p
 theta[6] ~ uniform(0,50); // delta_V
 theta[7] ~ normal(1.25e-8,1e-6); // kappa_M
-theta[8] ~ normal(0,1); // q_V
+theta[8] ~ normal(0,1e-5); // q_V
 theta[9] ~ uniform(200,500); // s
 theta[10] ~ uniform(0,5); // eta
 theta[11] ~ uniform(0,0.1); // delta_M
