@@ -117,7 +117,7 @@ transformed parameters{
 model{
 // priors
 theta[1] ~ uniform(0,1); // epsilon1
-theta[2] ~ normal(1,5); // k1
+theta[2] ~ uniform(0,7); // k1
 theta[3] ~ lognormal(log(5.1e-6),1); // beta
 theta[4] ~ uniform(0,5); // delta_I
 theta[5] ~ normal(5e-3,5); // p
@@ -129,7 +129,7 @@ theta[10] ~ uniform(0,5); // eta
 theta[11] ~ uniform(0,0.1); // delta_M
 theta[12] ~ uniform(0,500);//lognormal(log(120), 1); // phi 
 theta[13] ~ uniform(0,1); // epsilon2
-theta[14] ~ normal(1,5);  // k2
+theta[14] ~ uniform(0,7);  // k2
 theta[15] ~ uniform(1,30); //lognormal(log(3.5e-1),1); // V0
 //theta[13] ~ lognormal(log(0.3),1); // delta_Mr
 sigma[1] ~ normal(0,1);
