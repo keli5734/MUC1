@@ -49,9 +49,9 @@ data_combined_muc1_V_W <-  list(N_T_WT = length(time_data),
                                 MP0 = 0)
 
 generate1 <- list(
-  theta = c(runif(1,0,1),rtruncnorm(1,0,Inf,1,5), rlnorm(1,log(5.1e-6),1), runif(1,0,5), rtruncnorm(1,0,Inf,5.3e-3,5), 
+  theta = c(runif(1,0,1),runif(1,0,7), rlnorm(1,log(5.1e-6),1), runif(1,0,5), rtruncnorm(1,0,Inf,5.3e-3,5), 
             runif(1,0,50), rtruncnorm(1,0,Inf, 1.25e-8,1e-6), rtruncnorm(1,0,Inf,0,1e-5), runif(1,200,500), runif(1,0,5),
-            runif(1,0,1), runif(1,0,250), runif(1,0,1), rtruncnorm(1,0,Inf, 1,5), runif(1,0,30)),
+            runif(1,0,1), runif(1,0,250), runif(1,0,1), runif(1,0,7), runif(1,0,30)),
   sigma = c(0.5, 0.5))
 
 init1 <- generate1
