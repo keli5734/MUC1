@@ -58,8 +58,8 @@ init1 <- generate1
 
 init2 <- list(
   theta = c(0.5, 0.5, 3e-6, 1.3, 1, 
-            1.3, 1e-7, 1e-6, 8e+2, 1,
-            4e-2, 200, 0.5, 1.2, 30),
+            1.3, 1e-7, 1e-6, 4e+2, 1,
+            4e-2, 200, 0.5, 1.2, 15),
   sigma = c(0.5, 0.5))
 
 options(mc.cores=parallel::detectCores()) # to utilise all cores available in your computer
