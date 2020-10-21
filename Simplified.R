@@ -254,16 +254,20 @@ posterior_sample_table = data.frame(epsilon1 = posterior_samples_merged_after_bu
 # ================== plot posterior and prior for each parameter =================
 
 ggplot(posterior_sample_table, aes(x = log10(epsilon1))) + 
-  geom_histogram(breaks=seq(0,2,2/50),aes(y = ..density.., color = 'posterior')) + 
+  geom_histogram(breaks=seq(-2,2,2/50),aes(y = ..density.., color = 'posterior')) + 
   stat_function(fun = function(x) {dunif(x, -1, 1)}, aes(color = 'prior')) +
-  geom_vline(aes(xintercept=log10(mean(epsilon1))),
+  geom_vline(aes(xintercept=log10(quantile(epsilon1, 0.025))),
              linetype="dashed",color = 'red') + 
-  geom_vline(aes(xintercept=log10(1)),
-             linetype="dashed", color = 'black') + 
+  geom_vline(aes(xintercept=log10(mean(epsilon1))),
+             linetype="solid",color = 'red') + 
+  geom_vline(aes(xintercept=log10(quantile(epsilon1, 0.975))),
+             linetype="dashed",color = 'red') + 
+  #geom_vline(aes(xintercept=log10(1)),
+  #           linetype="dashed", color = 'black') + 
   lims(x = c(-1,1)) + 
   theme_classic() + 
   scale_colour_manual(name="Distribution",
-                      values=c(posterior="white", prior="purple")) # epsilon1 
+                      values=c(posterior="black", prior="purple")) # epsilon1 
 
 
 beta_WT <-  posterior_sample_table$beta
@@ -288,12 +292,16 @@ p +  geom_vline(data=mu, aes(xintercept=grp.mean, color=type),
 ggplot(posterior_sample_table, aes(x = log10(delta_I))) + 
   geom_histogram(breaks=seq(-3,3,0.05),aes(y = ..density.., color = 'posterior')) + 
   stat_function(fun = function(x) {dnorm(x, 0, 1)}, aes(color = 'prior')) +
+  geom_vline(aes(xintercept=log10(quantile(delta_I, 0.025))),
+               linetype="dashed",color = 'red') + 
   geom_vline(aes(xintercept=log10(mean(delta_I))),
-             linetype="dashed", color = 'red') + 
+             linetype="solid",color = 'red') + 
+  geom_vline(aes(xintercept=log10(quantile(delta_I, 0.975))),
+             linetype="dashed",color = 'red') + 
   lims(x = c(-1, 3)) + 
   theme_classic() + 
   scale_colour_manual(name="Distribution",
-                      values=c(posterior="white", prior="purple")) # delta_I
+                      values=c(posterior="black", prior="purple")) # delta_I
 
 
 
@@ -302,12 +310,16 @@ ggplot(posterior_sample_table, aes(x = log10(delta_I))) +
 ggplot(posterior_sample_table, aes(x = log10(p))) + 
   geom_histogram(breaks=seq(-6,2,8/100),aes(y = ..density.., color = 'posterior')) + 
   stat_function(fun = function(x) {dnorm(x, -2, 2)}, aes(color = 'prior')) +
+  geom_vline(aes(xintercept=log10(quantile(p, 0.025))),
+             linetype="dashed",color = 'red') + 
   geom_vline(aes(xintercept=log10(mean(p))),
+             linetype="solid",color = 'red') + 
+  geom_vline(aes(xintercept=log10(quantile(p, 0.975))),
              linetype="dashed",color = 'red') + 
   lims(x = c(-6, 3)) + 
   theme_classic() + 
   scale_colour_manual(name="Distribution",
-                      values=c(posterior="white", prior="purple")) # delta_I
+                      values=c(posterior="black", prior="purple")) # p
 
 
 
@@ -315,18 +327,26 @@ ggplot(posterior_sample_table, aes(x = log10(p))) +
 ggplot(posterior_sample_table, aes(x = log10(delta_V))) + 
   geom_histogram(breaks=seq(-2,2,4/50),aes(y = ..density.., color = 'posterior')) + 
   stat_function(fun = function(x) {dnorm(x, 0, 1)}, aes(color = 'prior')) +
+  geom_vline(aes(xintercept=log10(quantile(delta_V, 0.025))),
+             linetype="dashed",color = 'red') + 
   geom_vline(aes(xintercept=log10(mean(delta_V))),
+             linetype="solid",color = 'red') + 
+  geom_vline(aes(xintercept=log10(quantile(delta_V, 0.975))),
              linetype="dashed",color = 'red') + 
   lims(x = c(-3,2)) + 
   theme_classic() + 
   scale_colour_manual(name="Distribution",
-                      values=c(posterior="white", prior="purple")) # delta_V
+                      values=c(posterior="black", prior="purple")) # delta_V
 
 
 ggplot(posterior_sample_table, aes(x = log10(kappa_M))) + 
   geom_histogram(breaks=seq(-8,-4,4/50),aes(y = ..density.., color = 'posterior')) + 
   stat_function(fun = function(x) {dnorm(x, -6, 1)}, aes(color = 'prior')) +
+  geom_vline(aes(xintercept=log10(quantile(kappa_M, 0.025))),
+             linetype="dashed",color = 'red') + 
   geom_vline(aes(xintercept=log10(mean(kappa_M))),
+             linetype="solid",color = 'red') + 
+  geom_vline(aes(xintercept=log10(quantile(kappa_M, 0.975))),
              linetype="dashed",color = 'red') + 
   lims(x = c(-8,-4)) + 
   theme_classic() + 
@@ -336,39 +356,49 @@ ggplot(posterior_sample_table, aes(x = log10(kappa_M))) +
 V.decay <- posterior_sample_table$kappa_M * posterior_sample_table$s/posterior_sample_table$delta_M + posterior_sample_table$delta_V
 V.decay.df <- data.frame(V.decay = V.decay)
 ggplot(V.decay.df, aes(x = log10(V.decay))) + 
-  geom_histogram(breaks=seq(-2,1,3/50), aes(y = ..density..)) + 
-  #stat_function(fun = function(x) {dnorm(x, -6, 1)}, aes(color = 'prior')) +
+  geom_histogram(breaks=seq(-2,1,3/50), aes(y = ..density..,color = 'posterior')) + 
+  stat_function(fun = function(x) {dnorm(x, 0, 1)}, aes(color = 'prior')) +
+  geom_vline(aes(xintercept=log10(quantile(V.decay, 0.025))),
+             linetype="dashed",color = 'red') + 
   geom_vline(aes(xintercept=log10(mean(V.decay))),
+             linetype="solid",color = 'red') + 
+  geom_vline(aes(xintercept=log10(quantile(V.decay, 0.975))),
              linetype="dashed",color = 'red') + 
   lims(x = c(-3,1)) + 
-  theme_classic() 
-  #scale_colour_manual(name="Distribution",
-   #                   values=c(posterior="white", prior="purple")) # kappa_M
+  theme_classic() +
+  scale_colour_manual(name="Distribution",
+                     values=c(posterior="black", prior="purple")) # V.decay
 
 
 
 ggplot(posterior_sample_table, aes(x = log10(s))) + 
-  geom_histogram(breaks=seq(1,3,2/50),aes(y = ..density.., color = 'posterior')) + 
+  geom_histogram(breaks=seq(1,3.5,2.5/50),aes(y = ..density.., color = 'posterior')) + 
   stat_function(fun = function(x) {dnorm(x, 2, 0.5)}, aes(color = 'prior')) +
+  geom_vline(aes(xintercept=log10(quantile(s, 0.025))),
+             linetype="dashed",color = 'red') + 
   geom_vline(aes(xintercept=log10(mean(s))),
-             linetype="dashed", color = 'red') + 
+             linetype="solid",color = 'red') + 
+  geom_vline(aes(xintercept=log10(quantile(s, 0.975))),
+             linetype="dashed",color = 'red') + 
   lims(x = c(0,4)) + 
   theme_classic() + 
   scale_colour_manual(name="Distribution",
-                      values=c(posterior="white", prior="purple")) # s
+                      values=c(posterior="black", prior="purple")) # s
 
 
 ggplot(posterior_sample_table, aes(x = log10(epsilon2))) + 
-  geom_histogram(breaks=seq(0,2,2/50),aes(y = ..density.., color = 'posterior')) + 
+  geom_histogram(breaks=seq(-2,2,2/50),aes(y = ..density.., color = 'posterior')) + 
   stat_function(fun = function(x) {dunif(x, -1, 1)}, aes(color = 'prior')) +
-  geom_vline(aes(xintercept=log10(mean(epsilon2))),
+  geom_vline(aes(xintercept=log10(quantile(epsilon2, 0.025))),
              linetype="dashed",color = 'red') + 
-  geom_vline(aes(xintercept=log10(1)),
-             linetype="dashed",color = 'black') + 
+  geom_vline(aes(xintercept=log10(mean(epsilon2))),
+             linetype="solid",color = 'red') + 
+  geom_vline(aes(xintercept=log10(quantile(epsilon2, 0.975))),
+             linetype="dashed",color = 'red') + 
   lims(x = c(-1,1)) + 
   theme_classic() + 
   scale_colour_manual(name="Distribution",
-                      values=c(posterior="white", prior="purple")) # epsilon2
+                      values=c(posterior="black", prior="purple")) # epsilon2
 
 
 
@@ -376,12 +406,16 @@ ggplot(posterior_sample_table, aes(x = log10(epsilon2))) +
 ggplot(posterior_sample_table, aes(x = log10(delta_M))) + 
   geom_histogram(breaks=seq(-4,0,4/50),aes(y = ..density.., color = 'posterior')) + 
   stat_function(fun = function(x) {dnorm(x, -2, 1)}, aes(color = 'prior')) +
+  geom_vline(aes(xintercept=log10(quantile(delta_M, 0.025))),
+             linetype="dashed",color = 'red') + 
   geom_vline(aes(xintercept=log10(mean(delta_M))),
-             linetype="dashed", color = 'red') + 
+             linetype="solid",color = 'red') + 
+  geom_vline(aes(xintercept=log10(quantile(delta_M, 0.975))),
+             linetype="dashed",color = 'red') +  
   lims(x = c(-4,0)) + 
   theme_classic() + 
   scale_colour_manual(name="Distribution",
-                      values=c(posterior="white", prior="purple")) # delta_M
+                      values=c(posterior="black", prior="purple")) # delta_M
 
 
 
