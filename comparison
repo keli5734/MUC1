@@ -1,0 +1,436 @@
+# plot marginal posterior distributions of the two models side by side. 
+# Model 1 is the one with the extra parameter 'phi'
+# Model 2 is the one with 'phi' = 1. 
+
+
+# ==================== epsilon1 ========================= #
+
+epsilon1_M1 <- posterior_sample_table$epsilon1
+epsilon1_M2 <- posterior_sample_table_model2$epsilon1
+M.epsilon1.df <- data.frame(epsilon1 = c(epsilon1_M1, epsilon1_M2), type = as.factor(rep(c('M1', 'M2'), each = length(epsilon1_M1))))
+
+p <- ggplot(M.epsilon1.df, aes(x=epsilon1, color=type)) +
+  geom_histogram(aes(y = ..density..),fill = "white", position="dodge", alpha = 1, binwidth = 1/15)+
+  theme(legend.position="top")+
+  #scale_color_grey()+scale_fill_grey() + 
+  theme_classic() 
+
+p +  stat_function(fun = function(x) {dnorm(x, 1, 100)}, aes(color = 'prior')) +
+     geom_vline(aes(xintercept=1),
+             linetype="solid",color = 'black')  +
+     lims(x = c(0,5)) + xlab('epsilon1') + 
+    theme(text = element_text(size = 20))  
+
+
+# ==================== epsilon2 ========================= #
+
+epsilon2_M1 <- posterior_sample_table$epsilon2
+epsilon2_M2 <- posterior_sample_table_model2$epsilon2
+M.epsilon2.df <- data.frame(epsilon2 = c(epsilon2_M1, epsilon2_M2), type = as.factor(rep(c('M1', 'M2'), each = length(epsilon2_M1))))
+
+p <- ggplot(M.epsilon2.df, aes(x=epsilon2, color=type)) +
+  geom_histogram(aes(y = ..density..),fill = "white", position="dodge", alpha = 1, binwidth = 1/15)+
+  theme(legend.position="top")+
+  #scale_color_grey()+scale_fill_grey() + 
+  theme_classic() 
+
+p + stat_function(fun = function(x) {dnorm(x, 1, 100)}, aes(color = 'prior')) +
+   geom_vline(aes(xintercept=1),
+             linetype="solid",color = 'black')  +
+   lims(x = c(0,10)) + xlab('epsilon2')  + 
+  theme(text = element_text(size = 20))  
+
+
+
+# ==================== phi ========================= #
+
+
+ggplot(posterior_sample_table, aes(x = phi)) + 
+  geom_histogram(breaks=seq(0,0.5,0.5/100),aes(y = ..density.., color = 'posterior')) + 
+  stat_function(fun = function(x) {dnorm(x, 1,1e+5)}, aes(color = 'prior')) +
+  lims(x = c(0,0.5)) + 
+  theme_classic() + 
+  scale_colour_manual(name="Distribution",
+                      values=c(posterior="black", prior="purple")) + 
+  theme(text = element_text(size = 20))  
+
+
+
+# ==================== beta_WT ========================= #
+
+beta_WT_M1 <- posterior_sample_table$beta
+beta_WT_M2 <- posterior_sample_table_model2$beta
+M.beta_WT.df <- data.frame(beta_WT = log10(c(beta_WT_M1, beta_WT_M2)), type = as.factor(rep(c('M1', 'M2'), each = length(beta_WT_M1))))
+
+p <- ggplot(M.beta_WT.df, aes(x=beta_WT, color=type)) +
+  geom_histogram(aes(y = ..density..),fill = "white", position="dodge", alpha = 1, binwidth = 1/15)+
+  theme(legend.position="top")+
+  #scale_color_grey()+scale_fill_grey() + 
+  theme_classic() 
+
+p + stat_function(fun = function(x) {dnorm(x, -6, 4)}, aes(color = 'prior')) +
+    lims(x = c(-10,0)) + xlab('log10(beta_WT)') + 
+  theme(text = element_text(size = 20))  
+
+
+# ==================== p ========================= #
+
+p_M1 <- posterior_sample_table$p
+p_M2 <- posterior_sample_table_model2$p 
+M.p.df <-  data.frame(p = log10(c(p_M1, p_M2)), type = as.factor(rep(c('M1', 'M2'), each = length(p_M1))))
+
+p <- ggplot(M.p.df, aes(x=p, color=type)) +
+  geom_histogram(aes(y = ..density..),fill = "white", position="dodge", alpha = 1, binwidth = 1/15)+
+  theme(legend.position="top")+
+  #scale_color_grey()+scale_fill_grey() + 
+  theme_classic() 
+
+p + stat_function(fun = function(x) {dnorm(x, -2, 4)}, aes(color = 'prior')) +
+  lims(x = c(-6,6)) + xlab('log10(p)')   + 
+  theme(text = element_text(size = 20))  
+
+
+
+# ==================== delta_I ========================= #
+
+delta_I_M1 <- posterior_sample_table$delta_I
+delta_I_M2 <- posterior_sample_table_model2$delta_I
+M.delta_I.df <-  data.frame(delta_I = c(delta_I_M1, delta_I_M2), type = as.factor(rep(c('M1', 'M2'), each = length(delta_I_M1))))
+
+p <- ggplot(M.delta_I.df, aes(x=delta_I, color=type)) +
+  geom_histogram(aes(y = ..density..),fill = "white", position="dodge", alpha = 1, binwidth = 1/15)+
+  theme(legend.position="top")+
+  #scale_color_grey()+scale_fill_grey() + 
+  theme_classic() 
+
+p + stat_function(fun = function(x) {dlnorm(x, log(0.89), 1)}, aes(color = 'prior')) +
+  lims(x = c(0,10)) + xlab('delta_I')  + 
+  theme(text = element_text(size = 20))  
+
+
+# ==================== delta_V ========================= #
+
+delta_V_M1 <- posterior_sample_table$delta_V
+delta_V_M2 <- posterior_sample_table_model2$delta_V
+M.delta_V.df <-  data.frame(delta_V = c(delta_V_M1, delta_V_M2), type = as.factor(rep(c('M1', 'M2'), each = length(delta_V_M1))))
+
+p <- ggplot(M.delta_V.df, aes(x=delta_V, color=type)) +
+  geom_histogram(aes(y = ..density..),fill = "white", position="dodge", alpha = 1, binwidth = 0.5)+
+  theme(legend.position="top")+
+  #scale_color_grey()+scale_fill_grey() + 
+  theme_classic() 
+
+p + stat_function(fun = function(x) {dlnorm(x, log(28.4), 1)}, aes(color = 'prior')) +
+  lims(x = c(0,40)) + xlab('delta_V')  + 
+  theme(text = element_text(size = 20))  
+
+
+# ==================== delta_M ========================= #
+
+delta_M_M1 <- posterior_sample_table$delta_M
+delta_M_M2 <- posterior_sample_table_model2$delta_M
+M.delta_M.df <-  data.frame(delta_M = c(delta_M_M1, delta_M_M2), type = as.factor(rep(c('M1', 'M2'), each = length(delta_M_M1))))
+
+p <- ggplot(M.delta_M.df, aes(x=delta_M, color=type)) +
+  geom_histogram(aes(y = ..density..),fill = "white", position="dodge", alpha = 1, binwidth = 1e-4)+
+  theme(legend.position="top")+
+  #scale_color_grey()+scale_fill_grey() + 
+  theme_classic() 
+
+p + stat_function(fun = function(x) {dlnorm(x, log(4.4e-3), 1)}, aes(color = 'prior')) +
+  lims(x = c(1e-5,3e-2)) + xlab('delta_M')  + 
+  theme(text = element_text(size = 20))  
+
+
+# ==================== kappa_M ========================= #
+
+kappa_M_M1 <- posterior_sample_table$kappa_M
+kappa_M_M2 <- posterior_sample_table_model2$kappa_M
+M.kappa_M.df <-  data.frame(kappa_M = log10(c(kappa_M_M1, kappa_M_M2)), type = as.factor(rep(c('M1', 'M2'), each = length(kappa_M_M1))))
+
+p <- ggplot(M.kappa_M.df, aes(x=kappa_M, color=type)) +
+  geom_histogram(aes(y = ..density..),fill = "white", position="dodge", alpha = 1, binwidth = 1/10)+
+  theme(legend.position="top")+
+  #scale_color_grey()+scale_fill_grey() + 
+  theme_classic() 
+
+p + stat_function(fun = function(x) {dnorm(x, -6, 4)}, aes(color = 'prior')) +
+  lims(x = c(-20,0)) + xlab('log10(kappa_M)')   + 
+  theme(text = element_text(size = 20))  
+
+# ================= comparison model simulations =========== # 
+
+Within_host_model = function(t, y, theta){
+  
+  dydt1 = -theta[1] * theta[2] * y[1] * y[3];
+  dydt2 =  theta[1] * theta[2] * y[1] * y[3] - theta[3] * y[2];
+  dydt3 =  theta[4] * y[2] - theta[5] * y[3] - theta[6] * y[4] * y[3];
+  dydt4 =  330 + theta[7] * theta[9] * y[2] - theta[8] * y[4];
+  
+  list(c(dydt1, dydt2, dydt3, dydt4))
+  
+}
+
+n_iteration <- 1250
+
+t_ppc <-  seq(0, 10, 0.1)
+
+# ============ vectors for viral load and macrophage simulation of M1 and M2
+V_ppc_WT.M1 <-  matrix(, nrow = n_iteration, ncol = length(t_ppc))
+V_ppc_KO.M1 <-  matrix(, nrow = n_iteration, ncol = length(t_ppc)) # viral load
+M_ppc_WT.M1 <-  matrix(, nrow = n_iteration, ncol = length(t_ppc))
+M_ppc_KO.M1 <-  matrix(, nrow = n_iteration, ncol = length(t_ppc)) # macrophage 
+
+
+V_ppc_WT.M2 <-  matrix(, nrow = n_iteration, ncol = length(t_ppc))
+V_ppc_KO.M2 <-  matrix(, nrow = n_iteration, ncol = length(t_ppc)) # viral load 
+M_ppc_WT.M2 <-  matrix(, nrow = n_iteration, ncol = length(t_ppc))
+M_ppc_KO.M2 <-  matrix(, nrow = n_iteration, ncol = length(t_ppc)) # macrophage
+ 
+
+# ============ vector for 95 PI of viral load and macrophage simulation of M1 #
+lower_95PI_WT.M1  <- t_ppc
+median_95PI_WT.M1 <-  t_ppc
+upper_95PI_WT.M1 <-  t_ppc
+
+lower_95PI_KO.M1 <-  t_ppc
+median_95PI_KO.M1 <- t_ppc
+upper_95PI_KO.M1 <-  t_ppc
+
+
+lower_95PI_WT_M.M1 <-  t_ppc
+median_95PI_WT_M.M1 <- t_ppc
+upper_95PI_WT_M.M1  <- t_ppc
+
+lower_95PI_KO_M.M1 <-  t_ppc
+median_95PI_KO_M.M1 <-  t_ppc
+upper_95PI_KO_M.M1 <-  t_ppc
+
+
+
+# ============ vector for 95 PI of viral load and macrophage simulation of M2 #
+
+lower_95PI_WT.M2  <- t_ppc
+median_95PI_WT.M2 <-  t_ppc
+upper_95PI_WT.M2 <-  t_ppc
+
+lower_95PI_KO.M2 <-  t_ppc
+median_95PI_KO.M2 <- t_ppc
+upper_95PI_KO.M2 <-  t_ppc
+
+
+lower_95PI_WT_M.M2 <-  t_ppc
+median_95PI_WT_M.M2 <-t_ppc
+upper_95PI_WT_M.M2  <- t_ppc
+
+lower_95PI_KO_M.M2 <-  t_ppc
+median_95PI_KO_M.M2 <-  t_ppc
+upper_95PI_KO_M.M2 <-  t_ppc
+
+
+#======== ODE solver for viral load and macrophage in M1
+
+for (i in 1:n_iteration){
+  y_init.M1 = c(data_combined_muc1_V_W$T0, data_combined_muc1_V_W$I0, data_combined_muc1_V_W$V0, 330/posterior_sample_table$delta_M[i])
+  y_init.M2 = c(data_combined_muc1_V_W$T0, data_combined_muc1_V_W$I0, data_combined_muc1_V_W$V0, 330/posterior_sample_table_model2$delta_M[i])
+  
+  param_fit.M1 = c(1,
+                posterior_sample_table$beta[i], 
+                posterior_sample_table$delta_I[i], 
+                posterior_sample_table$p[i], 
+                posterior_sample_table$delta_V[i],
+                posterior_sample_table$kappa_M[i],
+                1,
+                posterior_sample_table$delta_M[i],
+                posterior_sample_table$phi[i])
+  
+  param_fit_hat.M1 = c(posterior_sample_table$epsilon1[i],
+                    posterior_sample_table$beta[i], 
+                    posterior_sample_table$delta_I[i], 
+                    posterior_sample_table$p[i], 
+                    posterior_sample_table$delta_V[i],
+                    posterior_sample_table$kappa_M[i],
+                    posterior_sample_table$epsilon2[i],
+                    posterior_sample_table$delta_M[i],
+                    posterior_sample_table$phi[i])
+  
+  
+  param_fit.M2 = c(1,
+                   posterior_sample_table_model2$beta[i], 
+                   posterior_sample_table_model2$delta_I[i], 
+                   posterior_sample_table_model2$p[i], 
+                   posterior_sample_table_model2$delta_V[i],
+                   posterior_sample_table_model2$kappa_M[i],
+                   1,
+                   posterior_sample_table_model2$delta_M[i],
+                   1)
+  
+  param_fit_hat.M2 = c(posterior_sample_table_model2$epsilon1[i],
+                       posterior_sample_table_model2$beta[i], 
+                       posterior_sample_table_model2$delta_I[i], 
+                       posterior_sample_table_model2$p[i], 
+                       posterior_sample_table_model2$delta_V[i],
+                       posterior_sample_table_model2$kappa_M[i],
+                       posterior_sample_table_model2$epsilon2[i],
+                       posterior_sample_table_model2$delta_M[i],
+                       1)
+  
+  model_output_WT.M1 = ode(times = t_ppc, y = y_init.M1, func = Within_host_model, parms = param_fit.M1, method = "bdf")
+  model_output_KO.M1 = ode(times = t_ppc, y = y_init.M1, func = Within_host_model, parms = param_fit_hat.M1, method = "bdf")
+  V_ppc_WT.M1[i,] = model_output_WT.M1[,4]
+  M_ppc_WT.M1[i,] = model_output_WT.M1[,5] 
+  
+  V_ppc_KO.M1[i,] = model_output_KO.M1[,4]
+  M_ppc_KO.M1[i,] = model_output_KO.M1[,5] 
+  
+  
+  model_output_WT.M2 = ode(times = t_ppc, y = y_init.M2, func = Within_host_model, parms = param_fit.M2, method = "bdf")
+  model_output_KO.M2 = ode(times = t_ppc, y = y_init.M2, func = Within_host_model, parms = param_fit_hat.M2, method = "bdf")
+  
+  V_ppc_WT.M2[i,] = model_output_WT.M2[,4]
+  M_ppc_WT.M2[i,] = model_output_WT.M2[,5] 
+  
+  V_ppc_KO.M2[i,] = model_output_KO.M2[,4]
+  M_ppc_KO.M2[i,] = model_output_KO.M2[,5] 
+}
+
+
+# ======= selecting 95% PI ============= # 
+
+for (i in 1:length(t_ppc)){
+  
+  temp_WT.M1 = unname(quantile(V_ppc_WT.M1[,i], probs = c(0.025, 0.5, 0.975)))
+  temp_KO.M1 = unname(quantile(V_ppc_KO.M1[,i], probs = c(0.025, 0.5, 0.975)))
+  
+  temp_WT_M.M1 = unname(quantile(M_ppc_WT.M1[,i], probs = c(0.025, 0.5, 0.975)))
+  temp_KO_M.M1 = unname(quantile(M_ppc_KO.M1[,i], probs = c(0.025, 0.5, 0.975)))
+  
+  lower_95PI_WT.M1[i] = temp_WT.M1[1]
+  median_95PI_WT.M1[i] = temp_WT.M1[2]
+  upper_95PI_WT.M1[i] = temp_WT.M1[3]
+  
+  lower_95PI_KO.M1[i] = temp_KO.M1[1]
+  median_95PI_KO.M1[i] = temp_KO.M1[2]
+  upper_95PI_KO.M1[i] = temp_KO.M1[3]
+  
+  
+  lower_95PI_WT_M.M1[i] = temp_WT_M.M1[1]
+  median_95PI_WT_M.M1[i] = temp_WT_M.M1[2]
+  upper_95PI_WT_M.M1[i] = temp_WT_M.M1[3]
+  
+  lower_95PI_KO_M.M1[i] = temp_KO_M.M1[1]
+  median_95PI_KO_M.M1[i] = temp_KO_M.M1[2]
+  upper_95PI_KO_M.M1[i] = temp_KO_M.M1[3]
+  
+  
+#============== M2 ==================#
+  temp_WT.M2 = unname(quantile(V_ppc_WT.M2[,i], probs = c(0.025, 0.5, 0.975)))
+  temp_KO.M2 = unname(quantile(V_ppc_KO.M2[,i], probs = c(0.025, 0.5, 0.975)))
+  
+  temp_WT_M.M2 = unname(quantile(M_ppc_WT.M2[,i], probs = c(0.025, 0.5, 0.975)))
+  temp_KO_M.M2 = unname(quantile(M_ppc_KO.M2[,i], probs = c(0.025, 0.5, 0.975)))
+  
+  lower_95PI_WT.M2[i] = temp_WT.M2[1]
+  median_95PI_WT.M2[i] = temp_WT.M2[2]
+  upper_95PI_WT.M2[i] = temp_WT.M2[3]
+  
+  lower_95PI_KO.M2[i] = temp_KO.M2[1]
+  median_95PI_KO.M2[i] = temp_KO.M2[2]
+  upper_95PI_KO.M2[i] = temp_KO.M2[3]
+  
+  
+  lower_95PI_WT_M.M2[i] = temp_WT_M.M2[1]
+  median_95PI_WT_M.M2[i] = temp_WT_M.M2[2]
+  upper_95PI_WT_M.M2[i] = temp_WT_M.M2[3]
+  
+  lower_95PI_KO_M.M2[i] = temp_KO_M.M2[1]
+  median_95PI_KO_M.M2[i] = temp_KO_M.M2[2]
+  upper_95PI_KO_M.M2[i] = temp_KO_M.M2[3]
+  
+}
+
+
+
+# ======== plot ============#
+
+
+viral.load.data <-  data.frame(time = rep(c(1,2,3,5,7), each = 5),
+                       V_WT = log10(exp(data_combined_muc1_V_W$log_viral_load_data_WT)),
+                       V_KO = log10(exp(data_combined_muc1_V_W$log_viral_load_data_KO))) # viral load data
+
+
+fit_plot_viral_load_WT <-  data.frame(time = c(t_ppc, t_ppc),
+                                      lower.M = c(lower_95PI_WT.M1, lower_95PI_WT.M2),
+                                      median.M = c(median_95PI_WT.M1, median_95PI_WT.M2),
+                                      upper.M = c(upper_95PI_WT.M1, upper_95PI_WT.M2),
+                                      Model = as.factor(rep(c('M1','M2'), each = length(t_ppc))))
+
+
+
+fit_plot_viral_load_KO <-  data.frame(time = c(t_ppc, t_ppc),
+                                      lower.M = c(lower_95PI_KO.M1, lower_95PI_KO.M2),
+                                      median.M = c(median_95PI_KO.M1, median_95PI_KO.M2),
+                                      upper.M = c(upper_95PI_KO.M1, upper_95PI_KO.M2),
+                                      Model = as.factor(rep(c('M1','M2'), each = length(t_ppc))))
+
+
+ggplot(fit_plot_viral_load_WT, aes(time))+
+  geom_point(data = viral.load.data, aes(time, V_WT), size = 3) +
+  geom_line(data = fit_plot_viral_load_WT, aes(time, log10(median.M), color = Model), size = 2, alpha = 0.8) +
+  geom_ribbon(aes(ymin = log10(lower.M), ymax = log10(upper.M), fill= Model), alpha = 0.1, na.rm = TRUE) +
+  theme_bw() +
+  theme(text = element_text(size = 20))   # compared WT viral load data between the two models 
+
+
+
+ggplot(fit_plot_viral_load_KO, aes(time))+
+  geom_point(data = viral.load.data, aes(time, V_KO), size = 3) +
+  geom_line(data = fit_plot_viral_load_KO, aes(time, log10(median.M), color = Model), size = 2, alpha = 0.8) +
+  geom_ribbon(aes(ymin = log10(lower.M), ymax = log10(upper.M), fill= Model), alpha = 0.1, na.rm = TRUE) +
+  theme_bw() +
+  theme(text = element_text(size = 20))   # compared KO viral load data between the two models 
+
+
+                      
+# ===================== macrophages ===============#
+
+
+
+macrophage.data.WT <-  data.frame(time = rep(c(1,3,5,7), c(5,5,5,4)),
+                               M_WT = log10(exp(data_combined_muc1_V_W$Macrophage_data_WT)))
+
+
+fit_plot_macrophage_WT <-  data.frame(time = c(t_ppc, t_ppc),
+                                      lower.M = c(lower_95PI_WT_M.M1, lower_95PI_WT_M.M2),
+                                      median.M = c(median_95PI_WT_M.M1, median_95PI_WT_M.M2),
+                                      upper.M = c(upper_95PI_WT_M.M1, upper_95PI_WT_M.M2),
+                                      Model = as.factor(rep(c('M1','M2'), each = length(t_ppc))))
+
+
+macrophage.data.KO = data.frame(time = rep(c(1,3,5,7), c(5,4,5,6)),
+                                M_KO = log10(exp(data_combined_muc1_V_W$Macrophage_data_KO)))
+
+
+fit_plot_macrophage_KO <-  data.frame(time = c(t_ppc, t_ppc),
+                                      lower.M = c(lower_95PI_KO_M.M1, lower_95PI_KO_M.M2),
+                                      median.M = c(median_95PI_KO_M.M1, median_95PI_KO_M.M2),
+                                      upper.M = c(upper_95PI_KO_M.M1, upper_95PI_KO_M.M2),
+                                      Model = as.factor(rep(c('M1','M2'), each = length(t_ppc))))
+
+
+ggplot(fit_plot_macrophage_WT, aes(time))+
+  geom_point(data = macrophage.data.WT, aes(time, M_WT), size = 3) +
+  geom_line(data = fit_plot_macrophage_WT, aes(time, log10(median.M), color = Model), size = 2, alpha = 0.8) +
+  geom_ribbon(aes(ymin = log10(lower.M), ymax = log10(upper.M), fill= Model), alpha = 0.1, na.rm = TRUE) +
+  theme_bw() +
+  theme(text = element_text(size = 20))   # compared WT macrophage data between the two models 
+
+
+
+
+ggplot(fit_plot_macrophage_KO, aes(time))+
+  geom_point(data = macrophage.data.KO, aes(time, M_KO), size = 3) +
+  geom_line(data = fit_plot_macrophage_KO, aes(time, log10(median.M), color = Model), size = 2, alpha = .8) +
+  geom_ribbon(aes(ymin = log10(lower.M), ymax = log10(upper.M), fill= Model), alpha = .1, na.rm = TRUE) +
+  theme_bw() +
+  theme(text = element_text(size = 20))   # compared KO macrophage data between the two models 
