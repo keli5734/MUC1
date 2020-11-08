@@ -266,12 +266,18 @@ V_ppc_WT.M1 <-  matrix(, nrow = n_iteration, ncol = length(t_ppc))
 V_ppc_KO.M1 <-  matrix(, nrow = n_iteration, ncol = length(t_ppc)) # viral load
 M_ppc_WT.M1 <-  matrix(, nrow = n_iteration, ncol = length(t_ppc))
 M_ppc_KO.M1 <-  matrix(, nrow = n_iteration, ncol = length(t_ppc)) # macrophage 
+I_ppc_WT.M1 <-  matrix(, nrow = n_iteration, ncol = length(t_ppc))
+I_ppc_KO.M1 <-  matrix(, nrow = n_iteration, ncol = length(t_ppc)) # infected cells 
+
 
 
 V_ppc_WT.M2 <-  matrix(, nrow = n_iteration, ncol = length(t_ppc))
 V_ppc_KO.M2 <-  matrix(, nrow = n_iteration, ncol = length(t_ppc)) # viral load 
 M_ppc_WT.M2 <-  matrix(, nrow = n_iteration, ncol = length(t_ppc))
 M_ppc_KO.M2 <-  matrix(, nrow = n_iteration, ncol = length(t_ppc)) # macrophage
+I_ppc_WT.M2 <-  matrix(, nrow = n_iteration, ncol = length(t_ppc))
+I_ppc_KO.M2 <-  matrix(, nrow = n_iteration, ncol = length(t_ppc)) # infected cells
+
  
 
 # ============ vector for 95 PI of viral load and macrophage simulation of M1 #
@@ -281,7 +287,7 @@ upper_95PI_WT.M1 <-  t_ppc
 
 lower_95PI_KO.M1 <-  t_ppc
 median_95PI_KO.M1 <- t_ppc
-upper_95PI_KO.M1 <-  t_ppc
+upper_95PI_KO.M1 <-  t_ppc # V, M1
 
 
 lower_95PI_WT_M.M1 <-  t_ppc
@@ -290,7 +296,17 @@ upper_95PI_WT_M.M1  <- t_ppc
 
 lower_95PI_KO_M.M1 <-  t_ppc
 median_95PI_KO_M.M1 <-  t_ppc
-upper_95PI_KO_M.M1 <-  t_ppc
+upper_95PI_KO_M.M1 <-  t_ppc # M, M1
+
+
+lower_95PI_WT_I.M1 <-  t_ppc
+median_95PI_WT_I.M1 <- t_ppc
+upper_95PI_WT_I.M1  <- t_ppc
+
+lower_95PI_KO_I.M1 <-  t_ppc
+median_95PI_KO_I.M1 <-  t_ppc
+upper_95PI_KO_I.M1 <-  t_ppc # I, M1
+
 
 
 
@@ -302,7 +318,7 @@ upper_95PI_WT.M2 <-  t_ppc
 
 lower_95PI_KO.M2 <-  t_ppc
 median_95PI_KO.M2 <- t_ppc
-upper_95PI_KO.M2 <-  t_ppc
+upper_95PI_KO.M2 <-  t_ppc # V, M2
 
 
 lower_95PI_WT_M.M2 <-  t_ppc
@@ -311,7 +327,18 @@ upper_95PI_WT_M.M2  <- t_ppc
 
 lower_95PI_KO_M.M2 <-  t_ppc
 median_95PI_KO_M.M2 <-  t_ppc
-upper_95PI_KO_M.M2 <-  t_ppc
+upper_95PI_KO_M.M2 <-  t_ppc # M, M2
+
+
+
+lower_95PI_WT_I.M2 <-  t_ppc
+median_95PI_WT_I.M2 <- t_ppc
+upper_95PI_WT_I.M2  <- t_ppc
+
+lower_95PI_KO_I.M2 <-  t_ppc
+median_95PI_KO_I.M2 <-  t_ppc
+upper_95PI_KO_I.M2 <-  t_ppc # I, M2
+
 
 
 #======== ODE solver for viral load and macrophage in M1
@@ -365,9 +392,12 @@ for (i in 1:n_iteration){
   model_output_KO.M1 = ode(times = t_ppc, y = y_init.M1, func = Within_host_model, parms = param_fit_hat.M1, method = "bdf")
   V_ppc_WT.M1[i,] = model_output_WT.M1[,4]
   M_ppc_WT.M1[i,] = model_output_WT.M1[,5] 
+  I_ppc_WT.M1[i,] = model_output_WT.M1[,2]
   
   V_ppc_KO.M1[i,] = model_output_KO.M1[,4]
   M_ppc_KO.M1[i,] = model_output_KO.M1[,5] 
+  I_ppc_KO.M1[i,] = model_output_KO.M1[,2]
+  
   
   
   model_output_WT.M2 = ode(times = t_ppc, y = y_init.M2, func = Within_host_model, parms = param_fit.M2, method = "bdf")
@@ -375,12 +405,17 @@ for (i in 1:n_iteration){
   
   V_ppc_WT.M2[i,] = model_output_WT.M2[,4]
   M_ppc_WT.M2[i,] = model_output_WT.M2[,5] 
+  I_ppc_WT.M2[i,] = model_output_WT.M2[,2]
   
   V_ppc_KO.M2[i,] = model_output_KO.M2[,4]
   M_ppc_KO.M2[i,] = model_output_KO.M2[,5] 
+  I_ppc_KO.M2[i,] = model_output_KO.M2[,2]
+  
   
   
 }
+
+
 
 
 # ======= selecting 95% PI ============= # 
@@ -392,6 +427,9 @@ for (i in 1:length(t_ppc)){
   
   temp_WT_M.M1 = unname(quantile(M_ppc_WT.M1[,i], probs = c(0.025, 0.5, 0.975)))
   temp_KO_M.M1 = unname(quantile(M_ppc_KO.M1[,i], probs = c(0.025, 0.5, 0.975)))
+  
+  temp_WT_I.M1 = unname(quantile(I_ppc_WT.M1[,i], probs = c(0.025, 0.5, 0.975)))
+  temp_KO_I.M1 = unname(quantile(I_ppc_KO.M1[,i], probs = c(0.025, 0.5, 0.975)))
   
   lower_95PI_WT.M1[i] = temp_WT.M1[1]
   median_95PI_WT.M1[i] = temp_WT.M1[2]
@@ -411,12 +449,25 @@ for (i in 1:length(t_ppc)){
   upper_95PI_KO_M.M1[i] = temp_KO_M.M1[3]
   
   
+  lower_95PI_WT_I.M1[i] = temp_WT_I.M1[1]
+  median_95PI_WT_I.M1[i] = temp_WT_I.M1[2]
+  upper_95PI_WT_I.M1[i] = temp_WT_I.M1[3]
+  
+  lower_95PI_KO_I.M1[i] = temp_KO_I.M1[1]
+  median_95PI_KO_I.M1[i] = temp_KO_I.M1[2]
+  upper_95PI_KO_I.M1[i] = temp_KO_I.M1[3]
+  
+  
+  
 #============== M2 ==================#
   temp_WT.M2 = unname(quantile(V_ppc_WT.M2[,i], probs = c(0.025, 0.5, 0.975)))
   temp_KO.M2 = unname(quantile(V_ppc_KO.M2[,i], probs = c(0.025, 0.5, 0.975)))
   
   temp_WT_M.M2 = unname(quantile(M_ppc_WT.M2[,i], probs = c(0.025, 0.5, 0.975)))
   temp_KO_M.M2 = unname(quantile(M_ppc_KO.M2[,i], probs = c(0.025, 0.5, 0.975)))
+  
+  temp_WT_I.M2 = unname(quantile(I_ppc_WT.M2[,i], probs = c(0.025, 0.5, 0.975)))
+  temp_KO_I.M2 = unname(quantile(I_ppc_KO.M2[,i], probs = c(0.025, 0.5, 0.975)))
   
   lower_95PI_WT.M2[i] = temp_WT.M2[1]
   median_95PI_WT.M2[i] = temp_WT.M2[2]
@@ -434,6 +485,14 @@ for (i in 1:length(t_ppc)){
   lower_95PI_KO_M.M2[i] = temp_KO_M.M2[1]
   median_95PI_KO_M.M2[i] = temp_KO_M.M2[2]
   upper_95PI_KO_M.M2[i] = temp_KO_M.M2[3]
+  
+  lower_95PI_WT_I.M2[i] = temp_WT_I.M2[1]
+  median_95PI_WT_I.M2[i] = temp_WT_I.M2[2]
+  upper_95PI_WT_I.M2[i] = temp_WT_I.M2[3]
+  
+  lower_95PI_KO_I.M2[i] = temp_KO_I.M2[1]
+  median_95PI_KO_I.M2[i] = temp_KO_I.M2[2]
+  upper_95PI_KO_I.M2[i] = temp_KO_I.M2[3]
   
 }
 
@@ -522,3 +581,60 @@ ggplot(fit_plot_macrophage_KO, aes(time))+
   geom_ribbon(aes(ymin = log10(lower.M), ymax = log10(upper.M), fill= Model), alpha = .1, na.rm = TRUE) +
   theme_bw() +
   theme(text = element_text(size = 20))   # compared KO macrophage data between the two models 
+
+
+
+
+# ================= infected cells or epithelial cells ==================#
+
+fit_plot_infected_cells_WT <-  data.frame(time = c(t_ppc, t_ppc),
+                                      lower.M = c(lower_95PI_WT_I.M1, lower_95PI_WT_I.M2),
+                                      T_WT = c(median_95PI_WT_I.M1, median_95PI_WT_I.M2),
+                                      upper.M = c(upper_95PI_WT_I.M1, upper_95PI_WT_I.M2),
+                                      Model = as.factor(rep(c('M1','M2'), each = length(t_ppc))))
+
+
+
+fit_plot_infected_cells_KO <-  data.frame(time = c(t_ppc, t_ppc),
+                                      lower.M = c(lower_95PI_KO_I.M1, lower_95PI_KO_I.M2),
+                                      T_KO = c(median_95PI_KO_I.M1, median_95PI_KO_I.M2),
+                                      upper.M = c(upper_95PI_KO_I.M1, upper_95PI_KO_I.M2),
+                                      Model = as.factor(rep(c('M1','M2'), each = length(t_ppc))))
+
+
+ggplot(fit_plot_infected_cells_WT, aes(time))+
+  geom_line(data = fit_plot_infected_cells_WT, aes(time, T_WT, color = Model), size = 2, alpha = 0.8) +
+  geom_ribbon(aes(ymin = lower.M, ymax = upper.M, fill= Model), alpha = 0.1, na.rm = TRUE) +
+  theme_bw() +
+  theme(text = element_text(size = 20))   # compared WT viral load data between the two models 
+
+
+
+ggplot(fit_plot_infected_cells_KO, aes(time))+
+  geom_line(data = fit_plot_infected_cells_KO, aes(time, T_KO, color = Model), size = 2, alpha = 0.8) +
+  geom_ribbon(aes(ymin = lower.M, ymax = upper.M, fill= Model), alpha = 0.1, na.rm = TRUE) +
+  theme_bw() +
+  theme(text = element_text(size = 20))   # compared KO viral load data between the two models 
+
+
+
+
+
+
+
+
+# Bayes factor 
+#install.packages("bridgesampling")
+library(bridgesampling)
+
+bridge_H1 <- bridge_sampler(fit_M1)
+bridge_H2 <- bridge_sampler(fit_M2)
+
+Bayes.factor <-  bf(bridge_H1, bridge_H2)
+
+Err1 <- error_measures(bridge_H1)$percentage
+Err2 <- error_measures(bridge_H2)$percentage
+
+bayesfactor_parameters(fit_M1)
+
+
