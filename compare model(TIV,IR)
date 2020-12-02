@@ -1,0 +1,428 @@
+# extract posteriors of all parameters estimated using TIV and IR models. 
+
+# extract posterior samples for selected parameters
+posterior_samples_merged_after_burnin_TIV = rstan::extract(fit_Model_TIV , pars = c( "theta_WT",'sigma'))
+posterior_samples_merged_after_burnin_IR_Sim = rstan::extract(fit_Model_IR_Sim , pars = c( "theta_WT",'sigma'))
+
+# show all marginal posterior distributions
+posterior_sample_table_TIV <-   data.frame(epsilon1 = posterior_samples_merged_after_burnin_TIV$theta_WT[,1],
+                                           beta = posterior_samples_merged_after_burnin_TIV$theta_WT[,2],
+                                           delta_I = posterior_samples_merged_after_burnin_TIV$theta_WT[,3],
+                                           p = posterior_samples_merged_after_burnin_TIV$theta_WT[,4],
+                                           delta_V = posterior_samples_merged_after_burnin_TIV$theta_WT[,5],
+                                           kappa_M = posterior_samples_merged_after_burnin_TIV$theta_WT[,6],
+                                           epsilon2 = posterior_samples_merged_after_burnin_TIV$theta_WT[,7],
+                                           delta_M = posterior_samples_merged_after_burnin_TIV$theta_WT[,8],
+                                           phi = posterior_samples_merged_after_burnin_TIV$theta_WT[,9],
+                                           I_50 = posterior_samples_merged_after_burnin_TIV$theta_WT[,10])
+
+posterior_sample_table_IR_Sim <-   data.frame(epsilon1 = posterior_samples_merged_after_burnin_IR_Sim$theta_WT[,1],
+                                           beta = posterior_samples_merged_after_burnin_IR_Sim$theta_WT[,2],
+                                           delta_I = posterior_samples_merged_after_burnin_IR_Sim$theta_WT[,3],
+                                           p = posterior_samples_merged_after_burnin_IR_Sim$theta_WT[,4],
+                                           delta_V = posterior_samples_merged_after_burnin_IR_Sim$theta_WT[,5],
+                                           kappa_M = posterior_samples_merged_after_burnin_IR_Sim$theta_WT[,6],
+                                           epsilon2 = posterior_samples_merged_after_burnin_IR_Sim$theta_WT[,7],
+                                           delta_M = posterior_samples_merged_after_burnin_IR_Sim$theta_WT[,8],
+                                           phi = posterior_samples_merged_after_burnin_IR_Sim$theta_WT[,9],
+                                           I_50 = posterior_samples_merged_after_burnin_IR_Sim$theta_WT[,10])
+
+# plot and compare epsilon1 estimated from the two different models 
+epsilon1_TIV <-  posterior_sample_table_TIV$epsilon1
+epsilon1_IR_Sim <- posterior_sample_table_IR_Sim$epsilon1
+
+epsilon1.df <- data.frame(epsilon1 = c(epsilon1_TIV, epsilon1_IR_Sim), type = as.factor(rep(c('TIV', 'IR_{Sim}'), each = length(epsilon1_TIV))))
+library(plyr)
+epsilon1.mu <- ddply(epsilon1.df, "type", summarise, grp.mean=mean(epsilon1))
+epsilon1.median <- ddply(epsilon1.df,"type", summarise, grp.median = quantile(epsilon1, 0.5))
+#head(mu)
+#head(median)
+p.epsilon1 <- ggplot(epsilon1.df, aes(x=epsilon1, color=type)) +
+  geom_histogram(aes(y = ..density..),fill = "white", position="dodge", alpha = 1, binwidth = 1/100)+
+  geom_vline(aes(xintercept=epsilon1.median$grp.median[1]),
+             linetype="dashed",color = 'red') +
+  geom_vline(aes(xintercept=epsilon1.median$grp.median[2]),
+             linetype="dashed",color = 'blue') +
+  theme(legend.position="top")+
+  #scale_color_grey()+scale_fill_grey() + 
+  theme_classic() 
+
+p.epsilon1 +  stat_function(fun = function(x) {dunif(x, 0, 1)}, aes(color = 'prior')) +
+    lims(x = c(0,1)) + xlab('epsilon1') #epsilon1
+
+
+# plot and compare epsilon2 
+epsilon2_TIV <-  posterior_sample_table_TIV$epsilon2
+epsilon2_IR_Sim <- posterior_sample_table_IR_Sim$epsilon2
+
+epsilon2.df <- data.frame(epsilon2 = c(epsilon2_TIV, epsilon2_IR_Sim), type = as.factor(rep(c('TIV', 'IR_{Sim}'), each = length(epsilon2_TIV))))
+epsilon2.mu<- ddply(epsilon2.df, "type", summarise, grp.mean=mean(epsilon2))
+epsilon2.median <- ddply(epsilon2.df,"type", summarise, grp.median = quantile(epsilon2, 0.5))
+#head(mu)
+#head(median)
+p.epsilon2 <- ggplot(epsilon2.df, aes(x=epsilon2, color=type)) +
+  geom_histogram(aes(y = ..density..),fill = "white", position="dodge", alpha = 1, binwidth = 1/100)+
+  theme(legend.position="top")+
+  geom_vline(aes(xintercept=epsilon2.median$grp.median[1]),
+             linetype="dashed",color = 'red') +
+  geom_vline(aes(xintercept=epsilon2.median$grp.median[2]),
+             linetype="dashed",color = 'blue') +
+  #scale_color_grey()+scale_fill_grey() + 
+  theme_classic() 
+
+p.epsilon2 +  stat_function(fun = function(x) {dunif(x, 0, 1)}, aes(color = 'prior')) +
+  lims(x = c(0,1)) + xlab('epsilon2')      #epsilon2
+
+
+# plot delta_V 
+delta_V_TIV <-  posterior_sample_table_TIV$delta_V
+delta_V_IR_Sim <- posterior_sample_table_IR_Sim$delta_V
+
+delta_V.df <- data.frame(delta_V = c(delta_V_TIV, delta_V_IR_Sim), type = as.factor(rep(c('TIV', 'IR_{Sim}'), each = length(delta_V_IR_Sim))))
+delta_V.mu<- ddply(delta_V.df, "type", summarise, grp.mean=mean(delta_V))
+delta_V.median <- ddply(delta_V.df,"type", summarise, grp.median = quantile(delta_V, 0.5))
+
+
+p.delta_V <- ggplot(delta_V.df, aes(x=delta_V, color=type)) +
+  geom_histogram(aes(y = ..density..),fill = "white", position="dodge", alpha = 1, binwidth = 1/2)+
+  theme(legend.position="top")+
+  geom_vline(aes(xintercept=delta_V.median$grp.median[1]),
+             linetype="dashed",color = 'red') +
+  geom_vline(aes(xintercept=delta_V.median$grp.median[2]),
+             linetype="dashed",color = 'blue') +
+  #scale_color_grey()+scale_fill_grey() + 
+  theme_classic() 
+
+p.delta_V +  stat_function(fun = function(x) {dlnorm(x, log(28.4), 1)}, aes(color = 'prior')) +
+  lims(x = c(0,50)) + xlab('delta_V')      # delta_V
+
+
+
+# plot delta_I 
+delta_I_TIV <-  posterior_sample_table_TIV$delta_I
+delta_I_IR_Sim <- posterior_sample_table_IR_Sim$delta_I
+
+delta_I.df <- data.frame(delta_I = c(delta_I_TIV, delta_I_IR_Sim), type = as.factor(rep(c('TIV', 'IR_{Sim}'), each = length(delta_I_IR_Sim))))
+delta_I.mu<- ddply(delta_I.df, "type", summarise, grp.mean=mean(delta_I))
+delta_I.median <- ddply(delta_I.df,"type", summarise, grp.median = quantile(delta_I, 0.5))
+
+
+p.delta_I <- ggplot(delta_I.df, aes(x=delta_I, color=type)) +
+  geom_histogram(aes(y = ..density..),fill = "white", position="dodge", alpha = 1, binwidth = 1/10)+
+  theme(legend.position="top")+
+  geom_vline(aes(xintercept=delta_I.median$grp.median[1]),
+             linetype="dashed",color = 'red') +
+  geom_vline(aes(xintercept=delta_I.median$grp.median[2]),
+             linetype="dashed",color = 'blue') +
+  #scale_color_grey()+scale_fill_grey() + 
+  theme_classic() 
+
+p.delta_I +  stat_function(fun = function(x) {dlnorm(x, log(0.89), 1)}, aes(color = 'prior')) +
+  lims(x = c(0,10)) + xlab('delta_I')      #delta_I
+
+
+
+
+# plot kappa_M
+kappa_M_TIV <-  posterior_sample_table_TIV$kappa_M
+kappa_M_IR_Sim <- posterior_sample_table_IR_Sim$kappa_M
+
+kappa_M.df <- data.frame(kappa_M = c(kappa_M_TIV, kappa_M_IR_Sim), type = as.factor(rep(c('TIV', 'IR_{Sim}'), each = length(kappa_M_IR_Sim))))
+kappa_M.mu<- ddply(kappa_M.df, "type", summarise, grp.mean=mean(kappa_M))
+kappa_M.median <- ddply(kappa_M.df,"type", summarise, grp.median = quantile(kappa_M, 0.5))
+
+
+p.kappa_M <- ggplot(kappa_M.df, aes(x=log10(kappa_M), color=type)) +
+  geom_histogram(aes(y = ..density..),fill = "white", position="dodge", alpha = 1, binwidth = .5)+
+  theme(legend.position="top")+
+  geom_vline(aes(xintercept=log10(kappa_M.median$grp.median[1])),
+             linetype="dashed",color = 'red') +
+  geom_vline(aes(xintercept=log10(kappa_M.median$grp.median[2])),
+             linetype="dashed",color = 'blue') +
+  #scale_color_grey()+scale_fill_grey() + 
+  theme_classic() 
+
+p.kappa_M +  stat_function(fun = function(x) {dnorm(x, -6, 4)}, aes(color = 'prior')) +
+  lims(x = c(-15,5)) + xlab('kappa_M')      #kappa_M
+
+
+
+
+# plot beta
+beta_TIV <-  posterior_sample_table_TIV$beta
+beta_IR_Sim <- posterior_sample_table_IR_Sim$beta
+
+beta.df <- data.frame(beta = c(beta_TIV, beta_IR_Sim), type = as.factor(rep(c('TIV', 'IR_{Sim}'), each = length(beta_IR_Sim))))
+beta.mu<- ddply(beta.df, "type", summarise, grp.mean=mean(beta))
+beta.median <- ddply(beta.df,"type", summarise, grp.median = quantile(beta, 0.5))
+
+
+p.beta <- ggplot(beta.df, aes(x=log10(beta), color=type)) +
+  geom_histogram(aes(y = ..density..),fill = "white", position="dodge", alpha = 1, binwidth = 1/50)+
+  theme(legend.position="top")+
+  geom_vline(aes(xintercept=log10(beta.median$grp.median[1])),
+             linetype="dashed",color = 'red') +
+  geom_vline(aes(xintercept=log10(beta.median$grp.median[2])),
+             linetype="dashed",color = 'blue') +
+  #scale_color_grey()+scale_fill_grey() + 
+  theme_classic() 
+
+p.beta+  stat_function(fun = function(x) {dnorm(x, -6, 4)}, aes(color = 'prior')) +
+  lims(x = c(-10,-2)) + xlab('beta')      #kappa_M
+
+
+
+
+# Model simulation here 
+
+TIV_model = function(t, y, theta){
+  
+  dydt1 =  0.8 * y[1] * (1 - (y[1] + y[2])/ 1e+7) - (1 - theta[1]* y[2]/(y[2] + theta[10]) ) * theta[2] * y[1] * y[3];
+  dydt2 =  (1 - theta[1]* y[2]/(y[2] + theta[10]) ) * theta[2] * y[1] * y[3] - theta[3] * y[2];
+  dydt3 =  theta[4] * y[2] - theta[5] * y[3] - theta[6] * y[4] * y[3];
+  dydt4 =  330 + (1 - theta[7]* y[2]/(y[2] + theta[10]) ) * theta[9] * y[2] - theta[8] * y[4];
+  
+  list(c(dydt1, dydt2, dydt3, dydt4))
+}
+
+
+IR_Sim_model = function(t, y, theta){
+  
+  dydt1 =  0.8 * y[1] * (1 - (y[1] + y[2])/ 1e+7) - (1 - theta[1]* y[2]/(y[2] + theta[10]) ) * theta[2] * y[1] * y[3];
+  dydt2 =  (1 - theta[1]* y[2]/(y[2] + theta[10]) ) * theta[2] * y[1] * y[3] - theta[3] * y[2] - 5e-5 * y[6] * y[2];
+  dydt3 =  theta[4] * y[2] - theta[5] * y[3] - theta[6] * y[4] * y[3] - 0.8 * y[5] * y[3] ;
+  dydt4 =  330 + (1 - theta[7]* y[2]/(y[2] + theta[10]) ) * theta[9] * y[2] - theta[8] * y[4];
+  dydt5 = 1e-6 * y[3] +  (1 - y[5]/1e+3) * y[5] - 0.1 * y[5];
+  dydt6 = 8e-5 * y[3] + 2 * (1 - y[6]/8e+4) * y[6] - 0.57 * y[6];
+  
+  list(c(dydt1, dydt2, dydt3, dydt4, dydt5, dydt6))
+}
+
+
+n_iteration <-  1000
+ts <-  seq(0, 10, 0.1)
+
+V.TIV.WT <-  matrix(, nrow = n_iteration, ncol = length(ts))
+V.IR.WT <-  matrix(, nrow = n_iteration, ncol = length(ts))
+M.TIV.WT = matrix(, nrow = n_iteration, ncol = length(ts))
+M.IR.WT = matrix(, nrow = n_iteration, ncol = length(ts))
+
+V.TIV.KO <-  matrix(, nrow = n_iteration, ncol = length(ts))
+V.IR.KO <-  matrix(, nrow = n_iteration, ncol = length(ts))
+M.TIV.KO <-  matrix(, nrow = n_iteration, ncol = length(ts))
+M.IR.KO <-  matrix(, nrow = n_iteration, ncol = length(ts))
+
+V.TIV.WT.Low <- ts
+V.TIV.WT.med <- ts
+V.TIV.WT.upp <- ts
+
+V.IR.WT.Low <- ts
+V.IR.WT.med <- ts
+V.IR.WT.upp <- ts
+
+M.TIV.WT.Low <- ts
+M.TIV.WT.med <- ts
+M.TIV.WT.upp <- ts
+
+M.IR.WT.Low <- ts
+M.IR.WT.med <- ts
+M.IR.WT.upp <- ts
+
+
+
+V.TIV.KO.Low <- ts
+V.TIV.KO.med <- ts
+V.TIV.KO.upp <- ts
+
+V.IR.KO.Low <- ts
+V.IR.KO.med <- ts
+V.IR.KO.upp <- ts
+
+M.TIV.KO.Low <- ts
+M.TIV.KO.med <- ts
+M.TIV.KO.upp <- ts
+
+M.IR.KO.Low <- ts
+M.IR.KO.med <- ts
+M.IR.KO.upp <- ts
+
+
+
+
+for (i in 1:n_iteration){
+  y_init_TIV = c(data_combined_muc1_TIV$T0, data_combined_muc1_TIV$I0, data_combined_muc1_TIV$V0, 330/posterior_sample_table_TIV$delta_M[i])
+  
+  TIV_para_WT = c(posterior_sample_table_TIV$epsilon1[i],
+                posterior_sample_table_TIV$beta[i], 
+                posterior_sample_table_TIV$delta_I[i], 
+                posterior_sample_table_TIV$p[i], 
+                posterior_sample_table_TIV$delta_V[i],
+                posterior_sample_table_TIV$kappa_M[i],
+                posterior_sample_table_TIV$epsilon2[i],
+                posterior_sample_table_TIV$delta_M[i],
+                posterior_sample_table_TIV$phi[i],
+                posterior_sample_table_TIV$I_50[i])
+  
+  TIV_para_KO = c(0,
+                    posterior_sample_table_TIV$beta[i], 
+                    posterior_sample_table_TIV$delta_I[i], 
+                    posterior_sample_table_TIV$p[i], 
+                    posterior_sample_table_TIV$delta_V[i],
+                    posterior_sample_table_TIV$kappa_M[i],
+                    0,
+                    posterior_sample_table_TIV$delta_M[i],
+                    posterior_sample_table_TIV$phi[i],
+                    posterior_sample_table_TIV$I_50[i])
+  
+  TIV_output_WT = ode(times = ts, y = y_init_TIV, func = TIV_model, parms = TIV_para_WT, method = "bdf")
+  TIV_output_KO = ode(times = ts, y = y_init_TIV, func = TIV_model, parms = TIV_para_KO, method = "bdf")
+  
+  V.TIV.WT[i,] = TIV_output_WT[,4]
+  M.TIV.WT[i,] = TIV_output_WT[,5] 
+  
+  V.TIV.KO[i,] = TIV_output_KO[,4]
+  M.TIV.KO[i,] = TIV_output_KO[,5]
+  
+  
+  
+  
+  y_init_IR = c(data_combined_muc1_IR_Sim$T0, data_combined_muc1_IR_Sim$I0, data_combined_muc1_IR_Sim$V0, 330/posterior_sample_table_IR_Sim$delta_M[i], 0, 0)
+  
+  IR_para_WT = c(posterior_sample_table_IR_Sim$epsilon1[i],
+                  posterior_sample_table_IR_Sim$beta[i], 
+                  posterior_sample_table_IR_Sim$delta_I[i], 
+                  posterior_sample_table_IR_Sim$p[i], 
+                  posterior_sample_table_IR_Sim$delta_V[i],
+                  posterior_sample_table_IR_Sim$kappa_M[i],
+                  posterior_sample_table_IR_Sim$epsilon2[i],
+                  posterior_sample_table_IR_Sim$delta_M[i],
+                  posterior_sample_table_IR_Sim$phi[i],
+                  posterior_sample_table_IR_Sim$I_50[i])
+  
+  IR_para_KO = c(0,
+                  posterior_sample_table_IR_Sim$beta[i], 
+                  posterior_sample_table_IR_Sim$delta_I[i], 
+                  posterior_sample_table_IR_Sim$p[i], 
+                  posterior_sample_table_IR_Sim$delta_V[i],
+                  posterior_sample_table_IR_Sim$kappa_M[i],
+                  0,
+                  posterior_sample_table_IR_Sim$delta_M[i],
+                  posterior_sample_table_IR_Sim$phi[i],
+                  posterior_sample_table_IR_Sim$I_50[i])
+  
+  IR_output_WT = ode(times = ts, y = y_init_IR, func = IR_Sim_model, parms = IR_para_WT, method = "bdf")
+  IR_output_KO = ode(times = ts, y = y_init_IR, func = IR_Sim_model, parms = IR_para_KO, method = "bdf")
+  
+  V.IR.WT[i,] = IR_output_WT[,4]
+  M.IR.WT[i,] = IR_output_WT[,5] 
+  
+  V.IR.KO[i,] = IR_output_KO[,4]
+  M.IR.KO[i,] = IR_output_KO[,5]
+  
+}
+
+
+
+
+for (i in 1:length(ts)){
+  temp.V.WT.TIV = unname(quantile(V.TIV.WT[,i], probs = c(0.025, 0.5, 0.975)))
+  temp.V.KO.TIV = unname(quantile(V.TIV.KO[,i], probs = c(0.025, 0.5, 0.975)))
+  temp.V.WT.IR = unname(quantile(V.IR.WT[,i], probs = c(0.025, 0.5, 0.975)))
+  temp.V.KO.IR = unname(quantile(V.IR.KO[,i], probs = c(0.025, 0.5, 0.975)))
+  
+  temp.M.WT.TIV = unname(quantile(M.TIV.WT[,i], probs = c(0.025, 0.5, 0.975)))
+  temp.M.KO.TIV = unname(quantile(M.TIV.KO[,i], probs = c(0.025, 0.5, 0.975)))
+  temp.M.WT.IR = unname(quantile(M.IR.WT[,i], probs = c(0.025, 0.5, 0.975)))
+  temp.M.KO.IR = unname(quantile(M.IR.KO[,i], probs = c(0.025, 0.5, 0.975)))
+  
+  
+  V.TIV.WT.Low[i] = temp.V.WT.TIV[1]
+  V.TIV.WT.med[i] = temp.V.WT.TIV[2]
+  V.TIV.WT.upp[i] = temp.V.WT.TIV[3]
+  
+  V.TIV.KO.Low[i] = temp.V.KO.TIV[1]
+  V.TIV.KO.med[i] = temp.V.KO.TIV[2]
+  V.TIV.KO.upp[i] = temp.V.KO.TIV[3]
+  
+  V.IR.WT.Low[i] = temp.V.WT.IR[1]
+  V.IR.WT.med[i] = temp.V.WT.IR[2]
+  V.IR.WT.upp[i] = temp.V.WT.IR[3]
+  
+  V.IR.KO.Low[i] = temp.V.KO.IR[1]
+  V.IR.KO.med[i] = temp.V.KO.IR[2]
+  V.IR.KO.upp[i] = temp.V.KO.IR[3]
+  
+  
+  
+  M.TIV.WT.Low[i] = temp.M.WT.TIV[1]
+  M.TIV.WT.med[i] = temp.M.WT.TIV[2]
+  M.TIV.WT.upp[i] = temp.M.WT.TIV[3]
+
+  M.TIV.KO.Low[i] = temp.M.KO.TIV[1]
+  M.TIV.KO.med[i] = temp.M.KO.TIV[2]
+  M.TIV.KO.upp[i] = temp.M.KO.TIV[3]
+  
+  M.IR.WT.Low[i] = temp.M.WT.IR[1]
+  M.IR.WT.med[i] = temp.M.WT.IR[2]
+  M.IR.WT.upp[i] = temp.M.WT.IR[3]
+  
+  M.IR.KO.Low[i] = temp.M.KO.IR[1]
+  M.IR.KO.med[i] = temp.M.KO.IR[2]
+  M.IR.KO.upp[i] = temp.M.KO.IR[3]
+  
+  
+  
+}
+
+
+V.data <-  data.frame(time = rep(c(1,2,3,5,7), each = 5),
+                       V_WT = log10(exp(data_combined_muc1_TIV$log_viral_load_data_WT)),
+                       V_KO = log10(exp(data_combined_muc1_TIV$log_viral_load_data_KO)))
+
+V.fit.WT <- data.frame(time = ts, V.WT = c(V.TIV.WT.med, V.IR.WT.med), V.WT.low = c(V.TIV.WT.Low, V.IR.WT.Low), V.WT.upp = c(V.TIV.WT.upp, V.IR.WT.upp), model = rep(c('TIV', 'IR'), each = length(V.TIV.WT.med)))
+V.fit.KO <- data.frame(time = ts, V.KO = c(V.TIV.KO.med, V.IR.KO.med), V.KO.low = c(V.TIV.KO.Low, V.IR.KO.Low), V.KO.upp = c(V.TIV.KO.upp, V.IR.KO.upp),model = rep(c('TIV', 'IR'), each = length(V.TIV.KO.med)))
+
+ggplot(V.fit.WT, aes(time))+
+  geom_point(data = V.data, aes(time, V_WT), size = 3) +
+  geom_line(data = V.fit.WT, aes(time, log10(V.WT), color = model), size = 1) +
+  geom_ribbon(aes(ymin = log10(V.WT.low), ymax = log10(V.WT.upp), fill = model), alpha = 0.2, na.rm = TRUE) +
+  theme_bw() + 
+  theme(text = element_text(size = 20))  # V_WT
+
+ggplot(V.fit.KO, aes(time))+
+  geom_point(data = V.data, aes(time, V_KO), size = 3) +
+  geom_line(data = V.fit.KO, aes(time, log10(V.KO), color = model), size = 1) +
+  geom_ribbon(aes(ymin = log10(V.KO.low), ymax = log10(V.KO.upp), fill = model), alpha = 0.2, na.rm = TRUE) +
+  theme_bw() + 
+  theme(text = element_text(size = 20))  # V_KO
+
+
+
+M.data.WT <-  data.frame(time = rep(c(1,3,5,7), c(5,5,5,4)),
+                            M_WT = log10(exp(data_combined_muc1_TIV$Macrophage_data_WT)))
+
+M.fit.WT <- data.frame(time = ts, M.WT = c(M.TIV.WT.med, M.IR.WT.med), M.WT.low = c(M.TIV.WT.Low, M.IR.WT.Low), M.WT.upp = c(M.TIV.WT.upp, M.IR.WT.upp), model = rep(c('TIV', 'IR'), each = length(M.TIV.WT.med)))
+ggplot(M.fit.WT, aes(time))+
+  geom_point(data = M.data.WT, aes(time, M_WT), size = 3) +
+  geom_line(data = M.fit.WT, aes(time, log10(M.WT), color = model), size = 1) +
+  geom_ribbon(aes(ymin = log10(M.WT.low), ymax = log10(M.WT.upp), fill = model), alpha = 0.2, na.rm = TRUE) +
+  theme_bw() + 
+  theme(text = element_text(size = 20))  # M_WT
+
+
+
+
+
+M.data.KO <-  data.frame(time = rep(c(1,3,5,7), c(5,4,5,6)),
+                            M_KO = log10(exp(data_combined_muc1_TIV$Macrophage_data_KO)))
+
+
+
+M.fit.KO <- data.frame(time = ts, M.KO = c(M.TIV.KO.med, M.IR.KO.med), M.KO.low = c(M.TIV.KO.Low, M.IR.KO.Low), M.KO.upp = c(M.TIV.KO.upp, M.IR.KO.upp), model = rep(c('TIV', 'IR'), each = length(M.TIV.WT.med)))
+ggplot(M.fit.KO, aes(time))+
+  geom_point(data = M.data.KO, aes(time, M_KO), size = 3) +
+  geom_line(data = M.fit.KO, aes(time, log10(M.KO), color = model), size = 1) +
+  geom_ribbon(aes(ymin = log10(M.KO.low), ymax = log10(M.KO.upp), fill = model), alpha = 0.2, na.rm = TRUE) +
+  theme_bw() + 
+  theme(text = element_text(size = 20))  # M_KO
+
